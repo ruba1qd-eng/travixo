@@ -7,6 +7,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show PathMetric, Tangent;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -51,9 +52,17 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _timer = Timer(const Duration(milliseconds: 4500), _go);
     _road.forward();
-    _car.forward(delay: const Duration(milliseconds: 300));
-    _letters.forward(delay: const Duration(milliseconds: 900));
-    _tag.forward(delay: const Duration(milliseconds: 2700));
+    // ملاحظة: forward() لا يدعم delay في إصدارات Flutter القديمة —
+    // نستخدم Future.delayed لجدولة ظهور العناصر بتتابع سينمائي
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _car.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) _letters.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 2700), () {
+      if (mounted) _tag.forward();
+    });
   }
 
   @override
@@ -317,7 +326,8 @@ class _RoadPainter extends CustomPainter {
     // 3) السيارة البيضاء — تتساق على المسار وتتوقف قرب النهاية
     if (carAlpha > 0 && carT > 0) {
       final double f = (carT * 0.90).clamp(0.0, 1.0);
-      final Tangent? tan = metric.getTangentForFraction(f);
+      final Tangent? tan =
+          metric.getTangentForOffset(metric.length * f);
       if (tan != null) {
         canvas.save();
         canvas.translate(tan.position.dx, tan.position.dy);
@@ -331,8 +341,8 @@ class _RoadPainter extends CustomPainter {
   void _paintCar(Canvas canvas) {
     final Paint shadow = Paint()..color = Colors.black.withOpacity(0.15);
     canvas.drawOval(
-        const Rect.fromCenter(
-            center: Offset(0, 16), width: 58, height: 12),
+        Rect.fromCenter(
+            center: const Offset(0, 16), width: 58, height: 12),
         shadow);
 
     final Paint white = Paint()..color = Colors.white;
