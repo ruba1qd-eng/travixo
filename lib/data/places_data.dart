@@ -35,9 +35,10 @@ class BestPlace {
   String name(bool isArabic) => isArabic ? nameAr : nameEn;
   String desc(bool isArabic) => isArabic ? descAr : descEn;
 
-  /// صورة المكان — نستخدم صور محافظته مع تشكيلة مختلفة
+  /// صورة المكان — صورة حقيقية للمكان نفسه، وبديل صورة المحافظة
   String img() =>
-      'https://images.unsplash.com/${kProvinceImgs[provinceId] ?? kProvinceImgs['sanaa']}?w=600&q=70&sig=place_$id';
+      kPlaceImgs[id] ??
+      'https://images.unsplash.com/${kProvinceImgs[provinceId] ?? kProvinceImgs['sanaa']}?w=600&q=70';
 }
 
 const List<BestPlace> kBestPlaces = [
