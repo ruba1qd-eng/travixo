@@ -1,3 +1,4 @@
+
 // ============================================================
 //  Travixo — نظام الألوان والثيم (النهاري + الليلي)
 //  الملف: lib/theme/app_theme.dart
@@ -40,13 +41,13 @@ class TIColors {
 
   // ==== ألوان بطاقات الأقسام — أسلوب Direct الملون ====
   static const Color cardTrips = Color(0xFFFF8C1A);     // الرحلات
-  static const Color cardRent = Color(0xFF2FA36B);      // تأجير السيارات
-  static const Color cardHotels = Color(0xFF3E79DD);    // الفنادق
-  static const Color cardPlans = Color(0xFF8F5BE3);     // صمم خطتك
-  static const Color cardResorts = Color(0xFFE55E8C);   // المنتجات والمنتجعات
-  static const Color cardPlaces = Color(0xFFD9A62F);    // أفضل الأماكن
-  static const Color cardMap = Color(0xFF22A2A2);       // الخريطة الحية
-  static const Color cardAssistant = Color(0xFF5C68E0); // المساعد الذكي
+  static const Color cardRent = Color(0xFFED7117);      // تأجير السيارات
+  static const Color cardHotels = Color(0xFFFFA13D);    // الفنادق
+  static const Color cardPlans = Color(0xFFC95F00);     // صمم خطتك
+  static const Color cardResorts = Color(0xFFFFB86B);   // المنتجات والمنتجعات
+  static const Color cardPlaces = Color(0xFFE08A00);    // أفضل الأماكن
+  static const Color cardMap = Color(0xFFD97A1F);       // الخريطة الحية
+  static const Color cardAssistant = Color(0xFFFF9231); // المساعد الذكي
 
   // لون النص فوق البطاقات الملونة — أبيض دائماً في الوضعين
   static const Color onCard = Color(0xFFFFFFFF);
