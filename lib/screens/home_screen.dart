@@ -1,13 +1,29 @@
+// ============================================================
+//  Travixo — الشاشة الرئيسية الجديدة
+//  الملف: lib/screens/home_screen.dart
+//  الخطوة 3: إعادة تصميم بأسلوب البطاقات الملونة الثمانية
+//  - عروض بتدرج Travixo البرتقالي + شارة الخصم
+//  - خدمات سريعة (نقل مع سائق / نقل المطار)
+//  - شبكة البطاقات الملونة: رحلات، تأجير، فنادق، صمم خطتك،
+//    منتجات ومنتجعات، أفضل الأماكن، الخريطة الحية، المساعد الذكي
+//  - نفس منطق التنقل القديم محفوظ + الشاشات الأربع الجديدة
+// ============================================================
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../data/demo_data.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import 'assistant_screen.dart';
+import 'best_places_screen.dart';
 import 'details_screens.dart';
-import 'transport_booking_screen.dart';
+import 'live_map_screen.dart';
 import 'search_screen.dart';
+import 'transport_booking_screen.dart';
+import 'trip_planner_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,13 +39,13 @@ class HomeScreen extends StatelessWidget {
         title: Row(children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: TIColors.teal.withOpacity(.15),
+            backgroundColor: TIColors.orangeSoft,
             child: Text(
               user?.firstName.isNotEmpty == true
                   ? user!.firstName[0].toUpperCase()
                   : 'T',
               style: const TextStyle(
-                  color: TIColors.teal, fontWeight: FontWeight.w900),
+                  color: TIColors.orangeDeep, fontWeight: FontWeight.w900),
             ),
           ),
           const SizedBox(width: 10),
@@ -98,7 +114,7 @@ class HomeScreen extends StatelessWidget {
                     color: Theme.of(context).dividerColor.withOpacity(.4)),
               ),
               child: Row(children: [
-                const Icon(Icons.search, color: TIColors.teal),
+                const Icon(Icons.search, color: TIColors.gold),
                 const SizedBox(width: 10),
                 Text(l.t('searchHint'),
                     style: TextStyle(color: Theme.of(context).hintColor)),
@@ -107,7 +123,7 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // ===== العروض المميزة =====
+          // ===== العروض المميزة — تدرج Travixo =====
           _sectionHeader(l.t('featuredOffers')),
           const SizedBox(height: 10),
           SizedBox(
@@ -125,32 +141,52 @@ class HomeScreen extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 6),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [TIColors.navy, Color(0xFF14335F)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: TravixoFX.orange,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: TIColors.gold.withOpacity(.4)),
+                      boxShadow: TravixoFX.shadow(TIColors.orangeDeep),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(o.title,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900)),
+                        Row(children: [
+                          Expanded(
+                            child: Text(o.title,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900)),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text('-${o.discountPercent}%',
+                                style: const TextStyle(
+                                    color: TIColors.orangeDeep,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900)),
+                          ),
+                        ]),
                         const SizedBox(height: 6),
                         Text(o.subtitle,
                             style: TextStyle(
-                                color: Colors.white.withOpacity(.8),
+                                color: Colors.white.withOpacity(.85),
                                 fontSize: 12)),
                         const SizedBox(height: 10),
                         Align(
                           alignment: AlignmentDirectional.centerEnd,
                           child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: TIColors.orangeDeep,
+                                minimumSize: const Size(0, 38),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16),
+                              ),
                               onPressed: () => Navigator.of(context).push(
                                   MaterialPageRoute(
                                       builder: (_) => DetailsScreen(
@@ -167,27 +203,67 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 22),
 
-          // ===== الخدمات =====
+          // ===== خدمات سريعة =====
+          _sectionHeader(l.t('quickActions')),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+              child: _quickCard(context, Icons.directions_car, l.t('localRide'),
+                  TravixoFX.orange, () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const TransportBookingScreen()))),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _quickCard(context, Icons.flight_takeoff, l.t('airport'),
+                  TravixoFX.soft(TIColors.cardHotels),
+                  () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const DetailsScreen(
+                          service: ServiceType.airport,
+                          targetId: 'list')))),
+            ),
+          ]),
+          const SizedBox(height: 22),
+
+          // ===== الخدمات — البطاقات الملونة الثمانية =====
           _sectionHeader(l.t('services')),
           const SizedBox(height: 10),
           GridView.count(
-            crossAxisCount: 3,
+            crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: 1.05,
+            childAspectRatio: 1.9,
             children: [
-              _service(context, Icons.directions_car, l.t('localRide'),
-                  ServiceType.localRide),
-              _service(context, Icons.car_rental, l.t('rentCar'),
-                  ServiceType.rentCar),
-              _service(context, Icons.hotel, l.t('hotels'), ServiceType.hotel),
-              _service(context, Icons.flight_takeoff, l.t('airport'),
-                  ServiceType.airport),
-              _service(context, Icons.map, l.t('tours'), ServiceType.tour),
-              _service(context, Icons.card_giftcard, l.t('packages'),
-                  ServiceType.package),
+              _coloredCard(context, Icons.tour, l.t('tours'),
+                  TIColors.cardTrips,
+                  () => _openList(context, ServiceType.tour)),
+              _coloredCard(context, Icons.car_rental, l.t('rentCar'),
+                  TIColors.cardRent,
+                  () => _openList(context, ServiceType.rentCar)),
+              _coloredCard(context, Icons.hotel, l.t('hotels'),
+                  TIColors.cardHotels,
+                  () => _openList(context, ServiceType.hotel)),
+              _coloredCard(context, Icons.event_note, l.t('planTrip'),
+                  TIColors.cardPlans,
+                  () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const TripPlannerScreen()))),
+              _coloredCard(context, Icons.storefront, l.t('resorts'),
+                  TIColors.cardResorts,
+                  () => _openList(context, ServiceType.package)),
+              _coloredCard(context, Icons.explore, l.t('bestPlaces'),
+                  TIColors.cardPlaces,
+                  () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const BestPlacesScreen()))),
+              _coloredCard(context, Icons.location_on, l.t('liveMap'),
+                  TIColors.cardMap,
+                  () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const LiveMapScreen()))),
+              _coloredCard(context, Icons.auto_awesome, l.t('aiAssistant'),
+                  TIColors.cardAssistant,
+                  () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const AssistantScreen()))),
             ],
           ),
           const SizedBox(height: 22),
@@ -272,9 +348,9 @@ class HomeScreen extends StatelessWidget {
                           errorBuilder: (_, __, ___) => Container(
                               width: 74,
                               height: 74,
-                              color: TIColors.teal.withOpacity(.15),
+                              color: TIColors.orangeSoft,
                               child: const Icon(Icons.hotel,
-                                  color: TIColors.teal))),
+                                  color: TIColors.orangeDeep))),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -319,7 +395,7 @@ class HomeScreen extends StatelessWidget {
                     Text(l.money(h.rooms.first.pricePerNightYer),
                         style: const TextStyle(
                             fontWeight: FontWeight.w900,
-                            color: TIColors.teal)),
+                            color: TIColors.orangeDeep)),
                   ]),
                 ),
               )),
@@ -329,47 +405,83 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _openList(BuildContext context, ServiceType type) =>
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => DetailsScreen(service: type, targetId: 'list')));
+
   Widget _sectionHeader(String title) => Padding(
         padding: const EdgeInsets.only(bottom: 4),
         child: Text(title,
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
       );
 
-  Widget _service(BuildContext context, IconData icon, String label,
-      ServiceType type) {
+  // بطاقة خدمة سريعة عريضة
+  Widget _quickCard(BuildContext context, IconData icon, String label,
+      LinearGradient gradient, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => type == ServiceType.localRide
-              ? const TransportBookingScreen()
-              : DetailsScreen(service: type, targetId: 'list'))),
+      onTap: onTap,
       child: Container(
+        height: 74,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(.4)),
+          gradient: gradient,
+          borderRadius: TIRadius.card,
+          boxShadow: TravixoFX.shadow(TIColors.orangeDeep),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: TIColors.teal.withOpacity(.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: TIColors.teal, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(label,
-                textAlign: TextAlign.center,
+        child: Row(children: [
+          Icon(icon, color: TIColors.onCard, size: 26),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                    fontSize: 11.5, fontWeight: FontWeight.w700),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-          ],
+                    color: TIColors.onCard,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800)),
+          ),
+          const Icon(Icons.chevron_right, color: TIColors.onCard, size: 20),
+        ]),
+      ),
+    );
+  }
+
+  // بطاقة ملونة من الثمانية
+  Widget _coloredCard(BuildContext context, IconData icon, String label,
+      Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: TravixoFX.soft(color),
+          borderRadius: TIRadius.card,
+          boxShadow: TravixoFX.shadow(color),
         ),
+        child: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(.22),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: TIColors.onCard, size: 22),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    color: TIColors.onCard,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25)),
+          ),
+          const Icon(Icons.chevron_right,
+              color: TIColors.onCard, size: 18),
+        ]),
       ),
     );
   }
