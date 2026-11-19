@@ -29,7 +29,7 @@ class WalletTab extends StatelessWidget {
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [TIColors.navy, Color(0xFF14335F)],
+                colors: [TIColors.orangeDeep, TIColors.navy],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
