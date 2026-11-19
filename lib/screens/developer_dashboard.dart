@@ -6,7 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 
-/// Travel In — Admin/Developer Portal (Phase 1 Demo)
+/// Travixo — Admin/Developer Portal (Phase 1 Demo)
 class DeveloperDashboard extends StatelessWidget {
   const DeveloperDashboard({super.key});
 
@@ -50,7 +50,7 @@ class DeveloperDashboard extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Travel In — Admin'),
+        title: const Text('Travixo — Admin'),
         actions: [
           IconButton(
             onPressed: () => state.toggleTheme(),
