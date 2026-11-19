@@ -23,10 +23,18 @@ jobs:
           cache: true
 
       - name: Generate project files
-        run: flutter create . --platforms android,web --org com.travelin --project-name travel_in_app
+        run: flutter create . --platforms android,web --org com.travixo --project-name travel_in_app
 
       - name: Remove auto test file
         run: rm -rf test
+
+      - name: Brand as Travixo (Android + Web)
+        run: |
+          sed -i 's/android:label=".*"/android:label="Travixo"/' android/app/src/main/AndroidManifest.xml
+          sed -i 's|<title>.*</title>|<title>Travixo</title>|' web/index.html
+          sed -i 's/"name": ".*"/"name": "Travixo"/' web/manifest.json
+          sed -i 's/"short_name": ".*"/"short_name": "Travixo"/' web/manifest.json
+          sed -i 's/"theme_color": ".*"/"theme_color": "#FF8C1A"/' web/manifest.json
 
       - name: Install dependencies
         run: flutter pub get
@@ -40,14 +48,14 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: travel-in-apk
+          name: travixo-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Build Web
         run: flutter build web --release --base-href /Travel-in-1.0/
 
       - name: Copy APK into Web for direct download
-        run: cp build/app/outputs/flutter-apk/app-release.apk build/web/travel-in-app.apk
+        run: cp build/app/outputs/flutter-apk/app-release.apk build/web/travixo.apk
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
