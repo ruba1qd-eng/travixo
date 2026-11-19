@@ -341,7 +341,7 @@ class HomeScreen extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                          hotelImg(h.provinceId, h.id.hashCode.abs()),
+                          h.img(),
                           width: 74,
                           height: 74,
                           fit: BoxFit.cover,
