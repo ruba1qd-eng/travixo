@@ -294,7 +294,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           height: 84,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-                colors: [Color(0xFF12305E), TIColors.navy]),
+                colors: [TIColors.orange, TIColors.orangeDeep]),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: TIColors.gold, width: 1.5),
           ),
