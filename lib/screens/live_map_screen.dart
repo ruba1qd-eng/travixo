@@ -314,8 +314,7 @@ class LiveMapScreen extends StatelessWidget {
                   dense: true,
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(hotelImg(h.provinceId,
-                        h.id.hashCode.abs()),
+                    child: Image.network(h.img(),
                         width: 46, height: 46, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                             width: 46,
