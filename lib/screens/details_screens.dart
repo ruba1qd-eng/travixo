@@ -206,7 +206,7 @@ class _HotelDetails extends StatelessWidget {
           ],
           flexibleSpace: FlexibleSpaceBar(
             background: Image.network(
-                hotelImg(hotel.provinceId, hotel.id.hashCode.abs()),
+                hotel.img(),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) =>
                     Container(color: TIColors.navy)),
