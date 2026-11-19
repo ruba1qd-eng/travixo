@@ -1,4 +1,5 @@
-/// Travel In — Data Models (Phase 1)
+
+/// Travixo — Data Models (Phase 1)
 /// كل النماذج جاهزة للربط بـ Backend حقيقي مستقبلاً ( toJson / fromJson )
 
 enum Availability { available, limited, comingSoon, unavailable }
@@ -64,23 +65,66 @@ const Map<String, String> kProvinceImgs = {
 String hotelImg(String provinceId, int index) =>
     'https://images.unsplash.com/${kProvinceImgs[provinceId] ?? kProvinceImgs['sanaa']}?w=600&q=70&sig=$index';
 
-const List<String> kCarImgs = [
-  'photo-1550355291-bbee04a92027',
-  'photo-1552519507-da3b142c6e3d',
-  'photo-1519641471654-76ce0107ad1b',
-  'photo-1568605117036-5fe5e7bab0b7',
-  'photo-1541899481282-d53bffe3c35d',
-  'photo-1583121274602-3e2820c69888',
-  'photo-1502877338535-766e1452684a',
-];
+/// صورة حقيقية لكل سيارة (من الويب) — المفتاح: معرّف السيارة
+const Map<String, String> kCarImgs = {
+  'c1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/41c1cdf11309.jpg',
+  'c2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9759e33b8529.jpg',
+  'c3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c5b816f285c6.jpg',
+  'c4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2fef5c2a9011.jpg',
+  'c5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4adf88d56774.jpg',
+  'c6': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/23c5704929ab.jpg',
+  'c7': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/163b406912b0.jpg',
+  'r1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8014ec0a0cfb.jpg',
+  'r2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d882cacd25a7.jpg',
+  'r3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/721ee2daf482.webp',
+};
 
-String carImg(String carId) {
-  final i = int.tryParse(carId.substring(1)) ?? 0;
-  return 'https://images.unsplash.com/${kCarImgs[i % kCarImgs.length]}?w=600&q=70';
-}
+String carImg(String carId) => kCarImgs[carId] ?? kCarImgs['c1']!;
 
 const String kDemoImg =
     'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=60';
+
+/// صور حقيقية للفنادق الموثّقة (من الويب) — المفتاح: معرّف الفندق
+/// تُستبدل بصور الشركاء الرسمية عند الإطلاق
+const Map<String, String> kHotelImgs = {
+  'rh1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e36fde6d8300.jpeg',
+  'rh2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8f99e8f99990.jpg',
+  'rh3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/83b2b6764707.jpg',
+  'rh4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/71526380f45d.jpeg',
+  'rh5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/de8ccfa752d6.jpg',
+  'rh6': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9079a79256f6.jpg',
+  'rh7': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/79536d9dcbb4.jpg',
+  'rh8': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/31ff43c9030a.jpg',
+  'rh9': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ac4286fcb014.jpg',
+  'rh10': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7b9b905b4a46.jpg',
+  'rh11': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/e84e57d036ac.jpg',
+  'rh12': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b479957e4a15.jpg',
+  'rh13': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/022ec68517d4.jpg',
+  'rh14': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3cadd84f11a4.jpg',
+  'rh15': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5fca9eb31c07.jpg',
+};
+
+/// صور حقيقية لأفضل الأماكن في اليمن — المفتاح: معرّف المكان
+const Map<String, String> kPlaceImgs = {
+  'p1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3764d994d03a.jpg',
+  'p2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2bbca0cd2188.jpg',
+  'p3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/01bab60d8a5c.jpg',
+  'p4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7723676eaefa.jpg',
+  'p5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/46ace7e35150.jpg',
+  'p6': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/b2cc7865b2bd.jpg',
+  'p7': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a83d4af32a2e.jpg',
+  'p8': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/47c1403c9988.jpg',
+  'p9': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/262db258d13b.jpg',
+  'p10': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2a19671f4069.jpg',
+  'p11': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c67a13ff6178.jpg',
+  'p12': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ce0f58483ed2.jpg',
+  'p13': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7bea4db84245.jpg',
+  'p14': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5ddeef94319f.jpg',
+  'p15': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/6a7aacc21c06.jpg',
+  'p16': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7995b8dccdc4.jpg',
+  'p17': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/51e2f9894f18.jpg',
+  'p18': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/59ca294af8bb.jpg',
+};
 class Province {
   final String id;
   final Availability status;
@@ -97,6 +141,9 @@ class Hotel {
   final List<HotelRoom> rooms;
   final bool verified; // موثّق = بيانات حقيقية، غير موثّق = Demo
   final double lat, lng;
+
+  /// صورة الفندق — حقيقية للفندق نفسه إن وُجدت، وإلا صورة المحافظة
+  String img() => kHotelImgs[id] ?? hotelImg(provinceId, id.hashCode.abs());
 
   const Hotel({
     required this.id,
