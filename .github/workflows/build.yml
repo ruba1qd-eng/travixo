@@ -41,6 +41,7 @@ jobs:
           sed -i 's/"name": ".*"/"name": "Travixo"/' web/manifest.json
           sed -i 's/"short_name": ".*"/"short_name": "Travixo"/' web/manifest.json
           sed -i 's/"theme_color": ".*"/"theme_color": "#FF8C1A"/' web/manifest.json
+          sed -i 's/apple-mobile-web-app-title" content="[^"]*"/apple-mobile-web-app-title" content="Travixo"/' web/index.html
 
       - name: Install dependencies
         run: flutter pub get
@@ -58,7 +59,7 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Build Web
-        run: flutter build web --release --base-href /Travel-in-1.0/
+        run: flutter build web --release --base-href /travixo/
 
       - name: Copy APK into Web for direct download
         run: cp build/app/outputs/flutter-apk/app-release.apk build/web/travixo.apk
