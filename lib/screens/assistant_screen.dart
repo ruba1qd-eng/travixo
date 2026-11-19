@@ -1,83 +1,74 @@
-// ============================================================
-//  Travixo — المساعد الذكي
-//  الملف: lib/screens/assistant_screen.dart
-//  الخطوة 4د: مساعد محادثة يعمل بالكامل بدون إنترنت
-//  - محرك نوايا بالكلمات المفتاحية (عربي + إنجليزي)
-//  - يجيب ببيانات حقيقية من التطبيق: أرخص فندق، أسعار الرحلات،
-//    المسافات بين المحافظات (Haversine) واقتراح خطط
-//  - أزرار إجراءات سريعة تفتح الشاشات مباشرة
-// ============================================================
-
+// المساعد الذكي المحسّن — Travixo Assistant
+// يرد على أي سؤال: تحيات، أسئلة عامة، وأسئلة التطبيق
 import 'package:flutter/material.dart';
-
-import '../data/demo_data.dart';
-import '../data/models.dart';
-import '../data/places_data.dart';
-import '../data/real_hotels_data.dart';
-import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
-import 'best_places_screen.dart';
-import 'details_screens.dart';
-import 'live_map_screen.dart';
-import 'transport_booking_screen.dart';
-import 'trip_planner_screen.dart';
+import '../state/app_state.dart';
+import '../l10n/app_localizations.dart';
+import '../screens/haptic.dart';
+import 'package:provider/provider.dart';
 
-/// أسماء شائعة للمحافظات يكتبها المستخدمون (عربي + إنجليزي)
-const Map<String, List<String>> kProvinceAliases = {
-  'sanaa': ['صنعاء', 'صنعا', 'sanaa', 'sana'],
-  'aden': ['عدن', 'aden'],
-  'taiz': ['تعز', 'taiz'],
-  'hadramout': ['حضرموت', 'مكلا', 'شبام', 'سيئون', 'hadramout', 'mukalla', 'shibam'],
-  'hodeidah': ['الحديدة', 'Hديدة', 'hodeidah', 'hodeida'],
-  'ibb': ['إب', 'ibb'],
-  'dhamar': ['ذمار', 'dhamar'],
-  'marib': ['مأرب', 'مارب', 'marib'],
-  'socotra': ['سقطرى', 'سقطره', 'socotra', 'سقوترا'],
-  'hajjah': ['حجة', 'hajjah'],
-  'lahij': ['لحج', 'lahij'],
-};
-
-class _Action {
-  final IconData icon;
-  final String label;
-  final Widget Function(BuildContext) screen;
-  const _Action(this.icon, this.label, this.screen);
+class AssistantScreen extends StatefulWidget {
+  const AssistantScreen({Key? key}) : super(key: key);
+  @override
+  State<AssistantScreen> createState() => _AssistantScreenState();
 }
 
 class _Msg {
-  final bool me;
   final String text;
-  final List<_Action> actions;
-  const _Msg(this.me, this.text, {this.actions = const []});
+  final bool isUser;
+  final List<_Action>? actions;
+  _Msg({required this.text, required this.isUser, this.actions});
 }
 
-class AssistantScreen extends StatefulWidget {
-  const AssistantScreen({super.key});
-  @override
-  State<AssistantScreen> createState() => _AssistantScreenState();
+class _Action {
+  final String label;
+  final VoidCallback onTap;
+  _Action({required this.label, required this.onTap});
 }
 
 class _AssistantScreenState extends State<AssistantScreen> {
   final _ctrl = TextEditingController();
   final _scroll = ScrollController();
-  bool _typing = false;
   final List<_Msg> _msgs = [];
+  bool _thinking = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _welcome());
+    _addBot(
+      'مرحباً بك في Travixo! 🧡\n\n'
+      'أنا مساعدك الذكي، اسألني عن:\n'
+      '🏨 الفنادق\n'
+      '🚗 السيارات\n'
+      '✈️ الرحلات\n'
+      '🗺️ الأماكن\n\n'
+      'أو اسألني أي سؤال عام — كيف حالك؟ ما اسمك؟ ما عاصمة اليمن؟ أنا هنا لمساعدتك!',
+      actions: [
+        _Action(label: '🏨 فنادق', onTap: () => _sendQuick('أين أفضل الفنادق؟')),
+        _Action(label: '🚗 سيارات', onTap: () => _sendQuick('ما هي السيارات المتاحة؟')),
+        _Action(label: '🗺️ أماكن', onTap: () => _sendQuick('ما هي أفضل الأماكن السياحية؟')),
+        _Action(label: '👋 كيف حالك؟', onTap: () => _sendQuick('كيف حالك؟')),
+      ],
+    );
   }
 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    _scroll.dispose();
-    super.dispose();
+  void _addBot(String text, {List<_Action>? actions}) {
+    setState(() => _msgs.add(_Msg(text: text, isUser: false, actions: actions)));
+    _scrollToBottom();
   }
 
-  void _toBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void _addUser(String text) {
+    setState(() => _msgs.add(_Msg(text: text, isUser: true)));
+    _scrollToBottom();
+  }
+
+  void _sendQuick(String text) {
+    _ctrl.text = text;
+    _send();
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 200), () {
       if (_scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
@@ -88,485 +79,439 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
   }
 
-  void _add(_Msg m) {
-    setState(() => _msgs.add(m));
-    _toBottom();
+  // ====== محرك الذكاء المحسّن — يرد على أي سؤال ======
+  String _respond(String input) {
+    final q = input.toLowerCase().trim();
+    if (q.isEmpty) return 'لم أفهم سؤالك، حاول مرة أخرى 😊';
+
+    // 1. التحيات
+    if (_matchesAny(q, ['مرحبا', 'مرحباً', 'هلا', 'اهلا', 'السلام', 'سلام', 'هاي', 'hello', 'hi', 'hey', 'صباح', 'مساء', 'مساء الخير', 'صباح الخير'])) {
+      return _random([
+        'أهلاً وسهلاً! 🧡 كيف أقدر أساعدك اليوم؟',
+        'مرحباً بك! أنا Travixo، مساعدك الذكي. اسألني أي شيء!',
+        'هلا والله! جاهز لأي سؤال — عن التطبيق أو عن أي شيء ثاني 😊',
+        'أهلين! نورت Travixo. وش تبي تعرف اليوم؟',
+      ]);
+    }
+
+    // 2. كيف حالك
+    if (_matchesAny(q, ['كيف حالك', 'كيفك', 'شلونك', 'how are you', 'كيف الحال', 'وش اخبارك', 'اخبارك', 'وش صاير'])) {
+      return _random([
+        'الحمدلله تمام! 🧡 أنا مساعد ذكي ما عندي مشاعر، لكني جاهز أساعدك 24/7!',
+        'ممتاز! شكراً لسؤالك 😊 وش تبي تعرف اليوم؟',
+        'أنا بخير ما دام أساعدك! اسألني أي شيء.',
+        'تمام التام! جاهز لأي سؤال عن السفر أو أي شيء ثاني.',
+      ]);
+    }
+
+    // 3. من أنت / اسمك
+    if (_matchesAny(q, ['من انت', 'من أنت', 'وش اسمك', 'ما اسمك', 'who are you', 'your name', 'عرفني بنفسك', 'انت مين', 'مين انت', 'ما هو اسمك'])) {
+      return 'أنا Travixo 🧡 — مساعدك الذكي للسفر والتنقل في اليمن.\n\n'
+          'أساعدك تحجز:\n'
+          '🏨 فنادق\n'
+          '🚗 سيارات\n'
+          '✈️ رحلات\n'
+          '🗺️ أماكن سياحية\n\n'
+          'وأيضاً أقدر أرد على أسئلتك العامة! جرب اسألني أي شيء.';
+    }
+
+    // 4. شكراً
+    if (_matchesAny(q, ['شكرا', 'شكراً', 'thanks', 'thank you', 'مشكور', 'يعطيك العافية', 'تسلم', 'الله يسلمك'])) {
+      return _random([
+        'العفو! 🧡 أنا هنا دائماً لمساعدتك.',
+        'ولا يهمك! اسألني أي وقت.',
+        'تسلم! هل تحتاج شيء ثاني؟',
+        'العفو والله! جاهز لأي سؤال.',
+      ]);
+    }
+
+    // 5. وقت / تاريخ
+    if (_matchesAny(q, ['كم الساعة', 'الوقت', 'what time', 'التاريخ', 'today', 'يوم', 'وش اليوم', 'كم التاريخ'])) {
+      final now = DateTime.now();
+      final days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      return '📅 اليوم: ${days[now.weekday % 7]}\n'
+          '📆 التاريخ: ${now.day}/${now.month}/${now.year}\n'
+          '🕐 الوقت: ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    }
+
+    // 6. طقس
+    if (_matchesAny(q, ['طقس', 'حرارة', 'جو', 'weather', 'حار', 'بارد', 'مطر', 'شمس'])) {
+      return 'للأسف ما عندي بيانات طقس مباشرة حالياً 🌤️\n\n'
+          'لكن أنصحك تتحقق من تطبيق الطقس على جوالك.\n\n'
+          'تقدر تسألني عن الفنادق أو الأماكن في أي محافظة!';
+    }
+
+    // 7. أسئلة عامة عن اليمن
+    if (_matchesAny(q, ['عاصمة اليمن', 'عاصمة', 'yemen capital', 'capital'])) {
+      return 'عاصمة اليمن هي صنعاء 🏛️\n\n'
+          'مدينة تاريخية رائعة، مصنفة ضمن مواقع التراث العالمي!\n\n'
+          'عندي فيها فنادق مميزة:\n'
+          '• موفنبيك صنعاء\n'
+          '• شيراتون صنعاء\n'
+          '• بريميه صنعاء\n\n'
+          'تبي أحجز لك؟';
+    }
+    if (_matchesAny(q, ['سقطرى', 'socotra', 'جزيرة سقطرى'])) {
+      return 'سقطرى جزيرة يمنية ساحرة 🌴\n\n'
+          'مشهورة بـ:\n'
+          '🌳 شجرة دم الأخوين (فريدة في العالم)\n'
+          '🏖️ شاطئ قلنسية\n'
+          '🦎 حيوانات ونباتات نادرة\n\n'
+          'مصنفة ضمن مواقع التراث العالمي!\n\n'
+          'تبي تكتشف أماكن فيها؟';
+    }
+    if (_matchesAny(q, ['اليمن', 'yemen', 'بلد', 'بلدي'])) {
+      return 'اليمن 🇾🇪 — أرض الحضارات والتاريخ!\n\n'
+          'مشهورة بـ:\n'
+          '🏛️ صنعاء القديمة (5000 سنة)\n'
+          '🏜️ شبام حضرموت (مانهاتن الصحراء)\n'
+          '🌴 سقطرى (جزيرة فريدة)\n'
+          '⛰️ جبال فيروزية\n\n'
+          'أساعدك تستكشفها! وش تبي تعرف؟';
+    }
+
+    // 8. فنادق
+    if (_matchesAny(q, ['فندق', 'hotels', 'حجز فندق', 'أين أنام', 'نوم', 'اقامة', 'إقامة'])) {
+      return 'عندي 15 فندق حقيقي في 6 محافظات! 🏨\n\n'
+          '🏛️ صنعاء: موفنبيك، شيراتون، بريميه\n'
+          '🌊 عدن: راديسون بلو، كريسنت\n'
+          '⛰️ تعز: السعيد، صنعاء للضيافة\n'
+          '🏜️ حضرموت: السيالة، سيئون\n'
+          '🌴 الحديدة: كورنيش\n'
+          '🌿 إب: خضراء\n\n'
+          'الأسعار تبدأ من 20,000 ريال/ليلة\n\n'
+          'تبي أحجز لك في أي محافظة؟';
+    }
+
+    // 9. سيارات
+    if (_matchesAny(q, ['سيارة', 'car', 'تأجير', 'سائق', 'نقل', 'سيارات'])) {
+      return 'عندي 12 سيارة للتأجير! 🚗\n\n'
+          '💰 اقتصادية: كيا بيكاتو، تويوتا كورولا\n'
+          '🛋️ مريحة: كامري، سوناتا\n'
+          '🚙 رباعية: لاند كروزر، برادو\n'
+          '✨ فاخرة: لكزس LX، مرسيدس S-Class\n\n'
+          'الأسعار تبدأ من 27,000 ريال/يوم\n\n'
+          'مع سائق أو بدون — وش تبي؟';
+    }
+
+    // 10. رحلات
+    if (_matchesAny(q, ['رحلة', 'trip', 'جولة', 'tour', 'سفر', 'travel'])) {
+      return 'عندي 3 جولات جاهزة! ✈️\n\n'
+          '🌊 عطلة رفاهية في عدن\n'
+          '🏜️ جولة حضرموت الأسبوعية\n'
+          '🏛️ جولة صنعاء التاريخية\n\n'
+          'كل جولة فيها برنامج يومي مفصل.\n\n'
+          'تبي تفاصيل أي جولة؟';
+    }
+
+    // 11. أماكن
+    if (_matchesAny(q, ['مكان', 'أماكن', 'places', 'سياحة', 'visit', 'زياره', 'زيارة', 'سياحي'])) {
+      return 'عندي 18 مكان سياحي! 🗺️\n\n'
+          '🏛️ صنعاء القديمة (يونسكو)\n'
+          '🏰 دار الحجر\n'
+          '🏜️ شبام حضرموت\n'
+          '🌳 شجرة دم الأخوين - سقطرى\n'
+          '🌉 جسر شهارة\n'
+          '⛰️ جبل برع\n'
+          '🏖️ شاطئ قلنسية\n\n'
+          'تبي تكتشف أماكن في محافظة معينة؟';
+    }
+
+    // 12. محافظات محددة
+    if (_matchesAny(q, ['صنعاء', 'sanaa', 'sana', 'صنعا'])) {
+      return 'صنعاء عاصمة اليمن 🏛️\n\n'
+          'مدينة تاريخية رائعة (5000 سنة)!\n\n'
+          'عندي فيها:\n'
+          '🏨 4 فنادق: موفنبيك، شيراتون، بريميه، برج السلام\n'
+          '🗺️ أماكن: صنعاء القديمة، دار الحجر\n\n'
+          'تبي أحجز لك فندق؟';
+    }
+    if (_matchesAny(q, ['عدن', 'aden'])) {
+      return 'عدن المدينة الساحلية! 🌊\n\n'
+          'عندي فيها:\n'
+          '🏨 فندقان: راديسون بلو، كريسنت\n'
+          '✈️ جولة: عطلة رفاهية في عدن\n\n'
+          'تبي تفاصيل أكثر؟';
+    }
+    if (_matchesAny(q, ['تعز', 'taiz'])) {
+      return 'تعز مدينة الجبل! ⛰️\n\n'
+          'عندي فيها:\n'
+          '🏨 فندقان: السعيد، صنعاء للضيافة\n\n'
+          'تبي أحجز لك؟';
+    }
+    if (_matchesAny(q, ['حضرموت', 'hadramaut', 'سيئون', 'seiyun'])) {
+      return 'حضرموت وادي دوّان! 🏜️\n\n'
+          'عندي فيها:\n'
+          '🏨 فندقان: السيالة، سيئون\n'
+          '🗺️ مكان: شبام (مانهاتن الصحراء)\n'
+          '✈️ جولة أسبوعية\n\n'
+          'تبي تكتشفها؟';
+    }
+    if (_matchesAny(q, ['حديدة', 'hodeidah', 'hudeida'])) {
+      return 'الحديدة المدينة الساحلية! 🌊\n\n'
+          'عندي فيها:\n'
+          '🏨 فندق كورنيش الحديدة\n\n'
+          'تبي تفاصيل أكثر؟';
+    }
+    if (_matchesAny(q, ['إب', 'ib', 'ibb'])) {
+      return 'إب مدينة الضباب! 🌿\n\n'
+          'عندي فيها:\n'
+          '🏨 فندق خضراء إب\n\n'
+          'تبي تحجز؟';
+    }
+
+    // 13. أسعار / محفظة
+    if (_matchesAny(q, ['سعر', 'price', 'كم', 'محفظة', 'wallet', 'رصيد', 'فلوس', 'money'])) {
+      return 'محفظتك فيها 100,000 ريال يمني 💰\n'
+          '(رصيد ترحيبي تجريبي)\n\n'
+          'الأسعار:\n'
+          '🏨 فنادق: تبدأ من 20,000 ريال/ليلة\n'
+          '🚗 سيارات: تبدأ من 27,000 ريال/يوم\n'
+          '✈️ جولات: حسب البرنامج\n\n'
+          'تبي تشوف تفاصيل أي خدمة؟';
+    }
+
+    // 14. مساعدة عامة
+    if (_matchesAny(q, ['مساعدة', 'help', 'ساعدني', 'وش تسوي', 'what can you do', 'ايش تقدر'])) {
+      return 'أقدر أساعدك في:\n\n'
+          '🏨 حجز الفنادق\n'
+          '🚗 تأجير السيارات\n'
+          '✈️ الرحلات والجولات\n'
+          '🗺️ اكتشاف الأماكن\n'
+          '💰 المحفظة والحجوزات\n\n'
+          'وأيضاً أرد على أسئلتك العامة!\n\n'
+          'جرب اسألني: "كيف حالك؟" أو "ما اسمك؟" أو "أين أفضل فندق؟"';
+    }
+
+    // 15. وداع
+    if (_matchesAny(q, ['باي', 'bye', 'مع السلامة', 'وداعا', 'see you', 'الى اللقاء', 'إلى اللقاء'])) {
+      return _random([
+        'مع السلامة! 🧡 أتمنى لك رحلة سعيدة.',
+        'باي باي! أنا هنا متى ما احتجتني.',
+        'الله معك!回来随时找我 (أرجع متى ما تبي)',
+        'في أمان الله! 🌟',
+      ]);
+    }
+
+    // 16. أسئلة شخصية عامة
+    if (_matchesAny(q, ['عمرك', 'كم عمرك', 'age', 'old are you'])) {
+      return 'أنا مساعد ذكي، ما عندي عمر بالمعنى البشري! 😊\n\n'
+          'لكني أُحدّث باستمرار لأخدمك أفضل.\n\n'
+          'اسألني عن السفر أو أي شيء ثاني!';
+    }
+    if (_matchesAny(q, ['وينك', 'وين انت', 'where are you', 'مكانك'])) {
+      return 'أنا موجود في تطبيق Travixo على جوالك! 📱\n\n'
+          'جاهز أساعدك في أي وقت.\n\n'
+          'وش تبي تعرف؟';
+    }
+    if (_matchesAny(q, ['تحبني', 'do you love me', 'احبك', 'i love you'])) {
+      return 'أنا أحبك كمستخدم Travixo! 🧡\n\n'
+          'هدفي أساعدك وتكون رحلتك مميزة.\n\n'
+          'اسألني أي شيء!';
+    }
+
+    // 17. أسئلة عشوائية / عامة جداً
+    if (_matchesAny(q, ['ما هو', 'ما هي', 'what is', 'what are', 'عرفني', 'explain'])) {
+      return 'سؤال جميل! 🤔\n\n'
+          'حالياً تخصصي هو السفر والتنقل في اليمن.\n\n'
+          'جرب تسألني عن:\n'
+          '• "أين أفضل فندق في صنعاء؟"\n'
+          '• "كم سعر تأجير سيارة؟"\n'
+          '• "ما هي أفضل الأماكن السياحية؟"\n\n'
+          'أو اسألني: "كيف حالك؟" أو "ما اسمك؟"';
+    }
+
+    // Fallback ذكي — لأي شيء آخر
+    return _random([
+      'فهمت! 😊 حالياً تخصصي هو السفر في اليمن — فنادق، سيارات، رحلات، أماكن.\n\n'
+          'لكن اسألني أي سؤال وسأحاول أفيدك!\n\n'
+          'جرب: "كيف حالك؟" أو "ما اسمك؟" أو "أين أفضل فندق؟"',
+      'سؤال مثير للاهتمام! 🤔\n\n'
+          'أنا متخصص في مساعدة المسافرين في اليمن.\n\n'
+          'جرب تسألني عن الفنادق أو السيارات أو الأماكن!',
+      'ما عندي إجابة دقيقة لهذا السؤال حالياً 😅\n\n'
+          'لكن أقدر أساعدك في:\n'
+          '🏨 الفنادق\n'
+          '🚗 السيارات\n'
+          '🗺️ الأماكن\n\n'
+          'وش تبي تعرف؟',
+    ]);
   }
 
-  void _welcome() {
-    final l = context.l;
-    _add(_Msg(false, l.t('assistantHello'), actions: _quickActions()));
+  bool _matchesAny(String q, List<String> keywords) {
+    return keywords.any((k) => q.contains(k));
   }
 
-  List<_Action> _quickActions() {
-    final l = context.l;
-    return [
-      _Action(Icons.hotel, l.t('hotels'),
-          (_) => const DetailsScreen(service: ServiceType.hotel, targetId: 'list')),
-      _Action(Icons.map, l.t('tours'),
-          (_) => const DetailsScreen(service: ServiceType.tour, targetId: 'list')),
-      _Action(Icons.directions_car, l.t('localRide'), (_) => const TransportBookingScreen()),
-      _Action(Icons.event_note, l.t('planTrip'), (_) => const TripPlannerScreen()),
-      _Action(Icons.explore, l.t('bestPlaces'), (_) => const BestPlacesScreen()),
-      _Action(Icons.location_on, l.t('liveMap'), (_) => const LiveMapScreen()),
-    ];
-  }
+  String _random(List<String> list) => list[DateTime.now().millisecondsSinceEpoch % list.length];
 
-  // ==================== إرسال ومعالجة ====================
   void _send() {
     final text = _ctrl.text.trim();
-    if (text.isEmpty || _typing) return;
+    if (text.isEmpty) return;
     _ctrl.clear();
-    _add(_Msg(true, text));
-    _reply(text);
+    _addUser(text);
+    setState(() => _thinking = true);
+    Future.delayed(const Duration(milliseconds: 600), () {
+      setState(() => _thinking = false);
+      _addBot(_respond(text));
+    });
   }
 
-  Future<void> _reply(String input) async {
-    final l = context.l;
-    final isAr = l.isArabic;
-    setState(() => _typing = true);
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    setState(() => _typing = false);
-
-    final q = input.toLowerCase();
-    final pid = _detectProvince(q);
-
-    // 1) تحية
-    if (_has(q, ['مرحبا', 'مرحبتين', 'السلام', 'هلا', 'أهلا', 'اهلا', 'hi', 'hello', 'salam'])) {
-      _add(_Msg(false,
-          isAr ? 'أهلاً بك في Travixo 👋 كيف أساعدك في رحلتك؟ جرب: «أرخص فندق في عدن» أو «رحلات حضرموت».'
-               : 'Welcome to Travixo 👋 How can I help? Try: "cheapest hotel in Aden" or "Hadramout tours".',
-          actions: _quickActions()));
-      return;
-    }
-
-    // 2) شكر
-    if (_has(q, ['شكرا', 'شكراً', 'thanks', 'thank you'])) {
-      _add(_Msg(false,
-          isAr ? 'العفو 🌟 رحلة سعيدة! أنا هنا في أي وقت.'
-               : 'You are welcome 🌟 Have a great trip! I am here anytime.'));
-      return;
-    }
-
-    // 3) محافظة محددة → بطاقة معلومات
-    if (pid != null) {
-      _add(_provinceInfo(pid));
-      return;
-    }
-
-    // 4) أرخص / أفضل فندق
-    if (_has(q, ['أرخص', 'ارخص', 'رخيص', 'cheap', 'cheapest']) &&
-        _has(q, ['فندق', 'فنادق', 'hotel', 'سكن', 'نوم', 'room'])) {
-      _add(_cheapestHotel());
-      return;
-    }
-    if (_has(q, ['أفضل', 'افضل', 'best', 'توب', 'top']) &&
-        _has(q, ['فندق', 'فنادق', 'hotel'])) {
-      _add(_bestHotel());
-      return;
-    }
-
-    // 5) فنادق عامة
-    if (_has(q, ['فندق', 'فنادق', 'hotel', 'سكن', 'إقامة', 'اقامة', 'نوم'])) {
-      _add(_Msg(false,
-          isAr ? 'لدينا فنادق موثوقة في صنعاء وعدن وتعز وحضرموت والمأرب وغيرها 🏨 ما المحافظة التي تخطط لها؟ أو افتح القائمة مباشرة:'
-               : 'We have trusted hotels in Sanaa, Aden, Taiz, Hadramout, Marib and more 🏨 Which province? Or open the list:',
-          actions: [
-            _Action(Icons.hotel, l.t('hotels'),
-                (_) => const DetailsScreen(service: ServiceType.hotel, targetId: 'list')),
-            _Action(Icons.explore, l.t('bestPlaces'), (_) => const BestPlacesScreen()),
-          ]));
-      return;
-    }
-
-    // 6) سيارات / نقل
-    if (_has(q, ['سيارة', 'سيارات', 'car', 'تأجير', 'تاجير', 'rent', 'نقل', 'سائق', 'drive', 'ride', 'مطار', 'airport'])) {
-      final airport = _has(q, ['مطار', 'airport']);
-      _add(_Msg(false,
-          airport
-              ? (isAr ? 'نقل المطار متاح مع سيارات VIP وعادية 🚘 قدّم طلبك مع مكان الانطلاق والوقت:'
-                      : 'Airport transfer is available with VIP and standard cars 🚘 Book with pickup and time:')
-              : (isAr ? 'نوفر نقل مع سائق وتأجير بدون سائق في معظم المحافظات 🚗 اختر ما يناسبك:'
-                      : 'We offer chauffeured rides and self-drive rentals 🚗 Choose what suits you:'),
-          actions: [
-            if (!airport)
-              _Action(Icons.directions_car, l.t('rentCar'),
-                  (_) => const DetailsScreen(service: ServiceType.rentCar, targetId: 'list')),
-            _Action(Icons.local_taxi,
-                airport ? l.t('airport') : l.t('localRide'),
-                (_) => const TransportBookingScreen()),
-          ]));
-      return;
-    }
-
-    // 7) رحلات وباقات
-    if (_has(q, ['رحلة', 'رحلات', 'tour', 'package', 'باقة', 'باقات', 'برنامج', 'جولة'])) {
-      _add(_toursReply());
-      return;
-    }
-
-    // 8) الخطة
-    if (_has(q, ['خطة', 'خطتي', 'خطه', 'plan', 'planner', 'برنامج رحلة', 'trip'])) {
-      _add(_Msg(false,
-          isAr ? 'صمم خطتك بنفسك: اختر المحافظة وعدد الأيام والميزانية واهتماماتك، وسأولّد لك برنامجاً يومياً كاملاً مع التكلفة التقديرية 📅'
-               : 'Build your own plan: choose province, days, budget and interests, and I will generate a full daily program with estimated cost 📅',
-          actions: [
-            _Action(Icons.event_note, l.t('planTrip'), (_) => const TripPlannerScreen()),
-          ]));
-      return;
-    }
-
-    // 9) الخريطة والأماكن
-    if (_has(q, ['خريطة', 'map', 'مكان', 'أماكن', 'اماكن', 'place', 'وجهة', 'مقصد'])) {
-      _add(_Msg(false,
-          isAr ? 'اكتشف اليمن على الخريطة الحية أو تصفح أفضل الأماكن المميزة 🗺️'
-               : 'Explore Yemen on the live map or browse the best places 🗺️',
-          actions: [
-            _Action(Icons.location_on, l.t('liveMap'), (_) => const LiveMapScreen()),
-            _Action(Icons.explore, l.t('bestPlaces'), (_) => const BestPlacesScreen()),
-          ]));
-      return;
-    }
-
-    // 10) أسعار عامة
-    if (_has(q, ['سعر', 'اسعار', 'أسعار', 'price', 'كم', 'cost', 'تكلفة'])) {
-      _add(_pricesSummary());
-      return;
-    }
-
-    // 11) مساعدة
-    if (_has(q, ['مساعدة', 'ساعدني', 'help', 'كيف', 'ايش', 'وش', 'ماذا'])) {
-      _add(_Msg(false,
-          isAr ? 'أقدر أساعدك في: 🏨 الفنادق وأسعارها — 🚗 السيارات والنقل — 🧭 الرحلات الجاهزة — 📅 صمم خطتك — 🗺️ الخريطة والأماكن. جرب سؤالاً مثل: «أرخص فندق» أو «رحلات حضرموت».'
-               : 'I can help with: 🏨 hotels & prices — 🚗 cars & transport — 🧭 ready tours — 📅 trip planner — 🗺️ map & places. Try: "cheapest hotel" or "Hadramout tours".',
-          actions: _quickActions()));
-      return;
-    }
-
-    // 12) لم أفهم — اقتراحات
-    _add(_Msg(false,
-        isAr ? 'لم أفهم السؤال تماماً 🤔 لكن يمكنني مساعدتك في الفنادق والسيارات والرحلات وخطط السفر. اختر من الأزرار أو اسألني مباشرة.'
-             : 'I did not fully get that 🤔 But I can help with hotels, cars, tours and trip plans. Pick a button or ask directly.',
-        actions: _quickActions()));
-  }
-
-  bool _has(String q, List<String> keys) => keys.any(q.contains);
-
-  String? _detectProvince(String q) {
-    for (final entry in kProvinceAliases.entries) {
-      if (entry.value.any(q.contains)) return entry.key;
-    }
-    return null;
-  }
-
-  // ==================== ردود ذكية ببيانات التطبيق ====================
-  _Msg _provinceInfo(String pid) {
-    final l = context.l;
-    final isAr = l.isArabic;
-    final prov = kProvinces.firstWhere((p) => p.id == pid);
-    final hotels = getAllHotels().where((h) => h.provinceId == pid).toList();
-    final places = placesInProvince(pid);
-    final status = switch (prov.status) {
-      Availability.available => isAr ? 'متاح للحجز' : 'available for booking',
-      Availability.limited => isAr ? 'توفر محدود' : 'limited availability',
-      Availability.comingSoon => isAr ? 'قريباً' : 'coming soon',
-      Availability.unavailable => isAr ? 'غير متوفر حالياً' : 'currently unavailable',
-    };
-    final km = pid == 'sanaa' ? 0.0 : distanceKm('sanaa', pid);
-    final distLine = pid == 'sanaa'
-        ? ''
-        : '\n${isAr ? 'المسافة تقريباً من صنعاء' : 'Approx. distance from Sanaa'}: ${km.toStringAsFixed(0)} ${l.t('km')} (~${l.duration(travelMinutes(km))})';
-
-    final topPlace = places.isNotEmpty
-        ? places.reduce((a, b) => a.rating > b.rating ? a : b)
-        : null;
-    final placeLine = topPlace == null
-        ? ''
-        : '\n${isAr ? 'أبرز معلم' : 'Top attraction'}: ${topPlace.name(isAr)} ⭐${topPlace.rating}';
-
-    return _Msg(false,
-        '📍 ${l.province(pid)} — $status.$distLine$placeLine\n${hotels.isEmpty ? (isAr ? 'لا توجد فنادق مسجلة بعد في هذه المحافظة.' : 'No hotels listed here yet.') : '${isAr ? 'لدينا' : 'We have'} ${hotels.length} ${isAr ? 'فندق' : 'hotel(s)'} ${isAr ? 'في هذه المحافظة بأبدأ من' : 'starting from'} ${l.money(_minHotelPrice(hotels))}.'}',
-        actions: [
-          if (hotels.isNotEmpty)
-            _Action(Icons.hotel, l.t('hotels'), (_) => const DetailsScreen(
-                service: ServiceType.hotel, targetId: 'list')),
-          if (places.isNotEmpty)
-            _Action(Icons.explore, l.t('bestPlaces'),
-                (_) => BestPlacesScreen(initialProvince: pid)),
-          _Action(Icons.event_note, l.t('planTrip'), (_) => const TripPlannerScreen()),
-        ]);
-  }
-
-  double _minHotelPrice(List<Hotel> hotels) => hotels.isEmpty
-      ? 0
-      : hotels
-          .map((h) => h.rooms.first.pricePerNightYer)
-          .reduce((a, b) => a < b ? a : b);
-
-  _Msg _cheapestHotel() {
-    final l = context.l;
-    final isAr = l.isArabic;
-    final all = getAllHotels().toList()
-      ..sort((a, b) => a.rooms.first.pricePerNightYer
-          .compareTo(b.rooms.first.pricePerNightYer));
-    final h = all.first;
-    final room = h.rooms.first;
-    return _Msg(false,
-        isAr
-            ? 'أرخص غرفة متوفرة الآن 🏨: «${room.name}» في ${h.name} — ${l.province(h.provinceId)} — ${l.money(room.pricePerNightYer)} لليلة ⭐${h.rating}'
-            : 'Cheapest available room 🏨: "${room.name}" at ${h.name} — ${l.province(h.provinceId)} — ${l.money(room.pricePerNightYer)} per night ⭐${h.rating}',
-        actions: [
-          _Action(Icons.visibility, l.t('bookNow'),
-              (_) => DetailsScreen(service: ServiceType.hotel, targetId: h.id)),
-          _Action(Icons.hotel, l.t('hotels'),
-              (_) => const DetailsScreen(service: ServiceType.hotel, targetId: 'list')),
-        ]);
-  }
-
-  _Msg _bestHotel() {
-    final l = context.l;
-    final isAr = l.isArabic;
-    final all = getAllHotels().toList()..sort((a, b) => b.rating.compareTo(a.rating));
-    final h = all.first;
-    return _Msg(false,
-        isAr
-            ? 'الأعلى تقييماً حالياً 🌟: ${h.name} — ${l.province(h.provinceId)} — ⭐${h.rating} من ${h.reviewsCount} ${isAr ? 'تقييم' : 'reviews'} — من ${l.money(h.rooms.first.pricePerNightYer)} لليلة'
-            : 'Highest rated right now 🌟: ${h.name} — ${l.province(h.provinceId)} — ⭐${h.rating} from ${h.reviewsCount} reviews — from ${l.money(h.rooms.first.pricePerNightYer)} per night',
-        actions: [
-          _Action(Icons.visibility, l.t('bookNow'),
-              (_) => DetailsScreen(service: ServiceType.hotel, targetId: h.id)),
-        ]);
-  }
-
-  _Msg _toursReply() {
-    final l = context.l;
-    final isAr = l.isArabic;
-    final lines = kTours
-        .map((t) => '• ${t.name} — ${t.days} ${l.t('days')} — ${l.money(t.priceYer)}')
-        .join('\n');
-    return _Msg(false,
-        isAr
-            ? 'هذه رحلاتنا الجاهزة الأكثر طلباً 🧭:\n$lines\n\nأو صمم خطتك الخاصة حسب ميزانيتك:'
-            : 'Our most requested tours 🧭:\n$lines\n\nOr build your own plan:',
-        actions: [
-          _Action(Icons.map, l.t('tours'),
-              (_) => const DetailsScreen(service: ServiceType.tour, targetId: 'list')),
-          _Action(Icons.event_note, l.t('planTrip'), (_) => const TripPlannerScreen()),
-        ]);
-  }
-
-  _Msg _pricesSummary() {
-    final l = context.l;
-    final isAr = l.isArabic;
-    final all = getAllHotels().toList()
-      ..sort((a, b) => a.rooms.first.pricePerNightYer
-          .compareTo(b.rooms.first.pricePerNightYer));
-    final minP = all.first.rooms.first.pricePerNightYer;
-    final minCar = kCars
-        .map((c) => c.pricePerDayYer)
-        .reduce((a, b) => a < b ? a : b);
-    final minTour = kTours.map((t) => t.priceYer).reduce((a, b) => a < b ? a : b);
-    return _Msg(false,
-        isAr
-            ? 'ملخص الأسعار التقديرية 💰:\n• الغرف تبدأ من ${l.money(minP)} لليلة\n• السيارات من ${l.money(minCar)} لليوم\n• الرحلات الجاهزة من ${l.money(minTour)}\n\nالأسعار تجريبية وتتحدد النهائية عند الحجز.'
-            : 'Estimated price summary 💰:\n• Rooms from ${l.money(minP)} / night\n• Cars from ${l.money(minCar)} / day\n• Ready tours from ${l.money(minTour)}\n\nPrices are demo estimates; final price at booking.',
-        actions: [
-          _Action(Icons.hotel, l.t('hotels'),
-              (_) => const DetailsScreen(service: ServiceType.hotel, targetId: 'list')),
-          _Action(Icons.directions_car, l.t('rentCar'),
-              (_) => const DetailsScreen(service: ServiceType.rentCar, targetId: 'list')),
-        ]);
-  }
-
-  // ==================== الواجهة ====================
   @override
   Widget build(BuildContext context) {
     final l = context.l;
-
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: const BoxDecoration(
-              gradient: TravixoFX.orange,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l.t('aiAssistant'),
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
-            Row(children: [
-              Container(width: 7, height: 7,
-                  decoration: const BoxDecoration(
-                      color: TIColors.success, shape: BoxShape.circle)),
-              const SizedBox(width: 4),
-              Text(l.t('assistantOnline'),
-                  style: const TextStyle(
-                      fontSize: 10, color: TIColors.success)),
-            ]),
-          ]),
-        ]),
+        title: Text(l.t('assistant'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        centerTitle: true,
+        elevation: 0,
       ),
-      body: Column(children: [
-        Expanded(
-          child: ListView.builder(
-            controller: _scroll,
-            padding: const EdgeInsets.all(14),
-            itemCount: _msgs.length + (_typing ? 1 : 0),
-            itemBuilder: (_, i) {
-              if (_typing && i == _msgs.length) return _typingBubble();
-              return _bubble(_msgs[i]);
-            },
-          ),
-        ),
-
-        // ===== شريط الإدخال =====
-        SafeArea(
-          top: false,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              border: Border(
-                  top: BorderSide(
-                      color: Theme.of(context).dividerColor.withOpacity(.4))),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scroll,
+              padding: const EdgeInsets.all(16),
+              itemCount: _msgs.length + (_thinking ? 1 : 0),
+              itemBuilder: (ctx, i) {
+                if (i == _msgs.length && _thinking) {
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: TIColors.orangeSoft,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(width: 6, height: 6, child: Container(decoration: BoxDecoration(color: TIColors.orange, shape: BoxShape.circle))),
+                          const SizedBox(width: 4),
+                          SizedBox(width: 6, height: 6, child: Container(decoration: BoxDecoration(color: TIColors.orange, shape: BoxShape.circle))),
+                          const SizedBox(width: 4),
+                          SizedBox(width: 6, height: 6, child: Container(decoration: BoxDecoration(color: TIColors.orange, shape: BoxShape.circle))),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                final m = _msgs[i];
+                return Align(
+                  alignment: m.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                    decoration: BoxDecoration(
+                      color: m.isUser ? TIColors.orange : TIColors.orangeSoft,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.text,
+                          style: TextStyle(
+                            color: m.isUser ? Colors.white : TIColors.navy,
+                            fontSize: 15,
+                          ),
+                        ),
+                        if (m.actions != null && m.actions!.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            children: m.actions!.map((a) => GestureDetector(
+                              onTap: () {
+                                Haptics.light();
+                                a.onTap();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  a.label,
+                                  style: TextStyle(
+                                    color: m.isUser ? Colors.white : TIColors.orangeDeep,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            )).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            child: Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _ctrl,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _send(),
-                  decoration: InputDecoration(
-                    hintText: l.t('assistantPlaceholder'),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _send,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(
-                    gradient: TravixoFX.orange,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.send_rounded,
-                      color: Colors.white, size: 20),
-                ),
-              ),
-            ]),
           ),
-        ),
-      ]),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _ctrl,
+                    onSubmitted: (_) => _send(),
+                    decoration: InputDecoration(
+                      hintText: l.t('ask_anything'),
+                      hintStyle: TextStyle(color: TIColors.lightSub, fontSize: 14),
+                      filled: true,
+                      fillColor: TIColors.lightCard,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    Haptics.light();
+                    _send();
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: TIColors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.send, color: Colors.white, size: 22),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _typingBubble() => Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: Theme.of(context).dividerColor.withOpacity(.4)),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            _dot(), const SizedBox(width: 4), _dot(), const SizedBox(width: 4), _dot(),
-          ]),
-        ),
-      );
-
-  Widget _dot() => Container(
-        width: 7,
-        height: 7,
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          color: TIColors.orange.withOpacity(.85),
-          shape: BoxShape.circle,
-        ),
-      );
-
-  Widget _bubble(_Msg m) {
-    if (m.me) {
-      return Align(
-        alignment: AlignmentDirectional.centerEnd,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * .78),
-          decoration: const BoxDecoration(
-            gradient: TravixoFX.orange,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(4),
-            ),
-          ),
-          child: Text(m.text,
-              style: const TextStyle(color: Colors.white, fontSize: 13.5,
-                  height: 1.45)),
-        ),
-      );
-    }
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * .82),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(4),
-              topRight: Radius.circular(16),
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-            border: Border.all(
-                color: Theme.of(context).dividerColor.withOpacity(.4)),
-          ),
-          child: Text(m.text,
-              style: const TextStyle(fontSize: 13.5, height: 1.5)),
-        ),
-      ),
-      if (m.actions.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10, left: 4, right: 4),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: m.actions
-                .map((a) => ActionChip(
-                      backgroundColor: TIColors.orangeSoft,
-                      avatar: Icon(a.icon, size: 15, color: TIColors.orangeDeep),
-                      label: Text(a.label,
-                          style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: TIColors.orangeDeep)),
-                      onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (c) => a.screen(c))),
-                    ))
-                .toList(),
-          ),
-        ),
-    ]);
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _scroll.dispose();
+    super.dispose();
   }
 }
