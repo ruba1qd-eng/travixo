@@ -302,7 +302,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
               color: TIColors.gold, size: 42),
         ),
         const SizedBox(height: 12),
-        const Text('Travel In',
+        const Text('Travixo',
             style: TextStyle(
                 fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
       ]);
@@ -422,7 +422,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   String _currency = 'YER';
 
   void _save() {
-    final l = context.l;
     if (!(_form.currentState?.validate() ?? false)) return;
     final state = context.read<AppState>();
     state.setCurrency(_currency);
