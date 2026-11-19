@@ -338,7 +338,7 @@ class _BestPlacesScreenState extends State<BestPlacesScreen> {
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
-                        hotelImg(h.provinceId, h.id.hashCode.abs()),
+                        h.img(),
                         width: 46,
                         height: 46,
                         fit: BoxFit.cover,
