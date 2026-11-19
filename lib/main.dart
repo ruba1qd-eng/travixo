@@ -14,12 +14,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initSupabase(); // تفعيل الاتصال بـ Supabase
   final prefs = await SharedPreferences.getInstance();
-  runApp(TravelInApp(prefs: prefs));
+  runApp(TravixoApp(prefs: prefs));
 }
 
-class TravelInApp extends StatelessWidget {
+class TravixoApp extends StatelessWidget {
   final SharedPreferences prefs;
-  const TravelInApp({super.key, required this.prefs});
+  const TravixoApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class TravelInApp extends StatelessWidget {
       child: Consumer<AppState>(
         builder: (context, state, _) {
           return MaterialApp(
-            title: 'Travel In',
+            title: 'Travixo',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light.copyWith(
               pageTransitionsTheme: const PageTransitionsTheme(
