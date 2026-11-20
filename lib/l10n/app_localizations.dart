@@ -24,7 +24,7 @@ class AppLocalizations {
   String carCat(String id) => _carCats[code]?[id] ?? id;
 
   /// العملة: YER / USD / SAR
-  String money(double yer) {
+  String money(num yer) {
     const yerPerUsd = 530.0, sarPerUsd = 3.75;
     switch (currency) {
       case 'USD':
