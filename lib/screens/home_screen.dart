@@ -9,6 +9,11 @@ import '../data/demo_data.dart';
 import '../data/real_hotels_data.dart';
 import '../data/places_data.dart';
 import '../screens/haptic.dart';
+import 'assistant_screen.dart';
+import 'best_places_screen.dart';
+import 'details_screens.dart';
+import 'live_map_screen.dart';
+import 'trip_planner_screen.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -60,7 +65,70 @@ class HomeScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       Haptics.light();
-                      // فتح الإشعارات
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(22)),
+                        ),
+                        builder: (_) => SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l.t('notifications'),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: TIColors.lightText,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                if ((AppState.instance?.notifications ??
+                                        const <String>[])
+                                    .isEmpty)
+                                  Text(
+                                    l.t('noNotifications'),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: TIColors.lightSub,
+                                    ),
+                                  )
+                                else
+                                  ...AppState.instance!.notifications.map(
+                                    (n) => Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 10),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.notifications_active,
+                                            color: TIColors.orange,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              n,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: TIColors.lightText,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
                     },
                     child: Container(
                       width: 48, // أكبر من 42
@@ -111,7 +179,10 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('trips'),
                         onTap: () {
                           Haptics.light();
-                          // فتح شاشة الرحلات
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const DetailsScreen(
+                                  service: ServiceType.tour,
+                                  targetId: 'list')));
                         },
                       ),
                       _ServiceCard(
@@ -120,7 +191,10 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('car_rental'),
                         onTap: () {
                           Haptics.light();
-                          // فتح شاشة السيارات
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const DetailsScreen(
+                                  service: ServiceType.rentCar,
+                                  targetId: 'list')));
                         },
                       ),
                       _ServiceCard(
@@ -129,7 +203,10 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('hotels'),
                         onTap: () {
                           Haptics.light();
-                          // فتح شاشة الفنادق
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const DetailsScreen(
+                                  service: ServiceType.hotel,
+                                  targetId: 'list')));
                         },
                       ),
                       _ServiceCard(
@@ -138,7 +215,8 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('trip_planner'),
                         onTap: () {
                           Haptics.light();
-                          // فتح مخطط الرحلات
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const TripPlannerScreen()));
                         },
                       ),
                       _ServiceCard(
@@ -147,7 +225,8 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('resorts'),
                         onTap: () {
                           Haptics.light();
-                          // فتح شاشة المنتجعات
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const BestPlacesScreen()));
                         },
                       ),
                       _ServiceCard(
@@ -156,7 +235,8 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('best_places'),
                         onTap: () {
                           Haptics.light();
-                          // فتح أفضل الأماكن
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const BestPlacesScreen()));
                         },
                       ),
                       _ServiceCard(
@@ -165,7 +245,8 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('liveMap'),
                         onTap: () {
                           Haptics.light();
-                          // فتح الخريطة الحية
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const LiveMapScreen()));
                         },
                       ),
                       _ServiceCard(
@@ -174,7 +255,8 @@ class HomeScreen extends StatelessWidget {
                         title: l.t('assistant'),
                         onTap: () {
                           Haptics.light();
-                          // فتح المساعد الذكي
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const AssistantScreen()));
                         },
                       ),
                     ],
@@ -210,7 +292,10 @@ class HomeScreen extends StatelessWidget {
                         return GestureDetector(
                           onTap: () {
                             Haptics.light();
-                            // فتح تفاصيل العرض
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => DetailsScreen(
+                                    service: offer.service,
+                                    targetId: offer.targetId)));
                           },
                           child: Container(
                             width: 280, // أكبر من 240
@@ -302,7 +387,10 @@ class HomeScreen extends StatelessWidget {
                         return GestureDetector(
                           onTap: () {
                             Haptics.light();
-                            // فتح تفاصيل الفندق
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => DetailsScreen(
+                                    service: ServiceType.hotel,
+                                    targetId: hotel.id)));
                           },
                           child: Container(
                             width: 260, // أكبر من 220
@@ -419,7 +507,9 @@ class HomeScreen extends StatelessWidget {
                         return GestureDetector(
                           onTap: () {
                             Haptics.light();
-                            // فتح تفاصيل المكان
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => BestPlacesScreen(
+                                    initialProvince: place.provinceId)));
                           },
                           child: Container(
                             width: 260, // أكبر من 220
