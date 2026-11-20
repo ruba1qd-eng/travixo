@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     duration: const Duration(milliseconds: 1200),
   )..forward();
 
-  // حركة الطفو المستمرة (لطيفة — للطائرة وشارة الخصم)
+  // حركة الطفو المستمرة (لطيفة — للڤان وشارة الخصم)
   late final AnimationController _float = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2600),
@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ============================================================
-  // الترويسة — تدرج برتقالي بحواف دائرية + زخارف + طائرة تطفو بلطف
+  // الترويسة — تدرج برتقالي بحواف دائرية + زخارف + ڤان تطفو بلطف
   // ============================================================
   Widget _hdr(AppLocalizations l, AppUser? user) {
     return Container(
@@ -525,7 +525,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             fit: StackFit.expand,
                             children: [
                               // أيقونة الخدمة الكبيرة كزخرفة
-                              Positioned(
+                              PositionedDirectional(
                                 end: -18,
                                 bottom: -18,
                                 child: Icon(
