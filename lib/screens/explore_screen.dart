@@ -37,6 +37,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       }
       results.add(_ResultItem(
         id: h.id,
+        img: h.img(),
         service: ServiceType.hotel,
         title: h.name,
         subtitle: l.province(h.provinceId),
@@ -57,6 +58,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       if (c.pricePerDayYer / 1000 > _maxPriceK) continue;
       results.add(_ResultItem(
         id: c.id,
+        img: c.img(),
         service: c.withDriver ? ServiceType.localRide : ServiceType.rentCar,
         title: c.name,
         subtitle:
@@ -78,6 +80,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       if (t.priceYer / 1000 > _maxPriceK * 4) continue;
       results.add(_ResultItem(
         id: t.id,
+        img: kProvinceImgs[t.provinceId] ?? kDemoImg,
         service: ServiceType.tour,
         title: t.name,
         subtitle:
@@ -175,18 +178,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               color: TIColors.teal.withOpacity(.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: Icon(
-                                switch (r.service) {
-                                  ServiceType.hotel => Icons.hotel,
-                                  ServiceType.localRide =>
-                                    Icons.directions_car,
-                                  ServiceType.rentCar => Icons.car_rental,
-                                  ServiceType.tour => Icons.map,
-                                  ServiceType.airport =>
-                                    Icons.flight_takeoff,
-                                  _ => Icons.card_giftcard,
-                                },
-                                color: TIColors.teal),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(13),
+                              child: Image.network(
+                                r.img,
+                                width: 54,
+                                height: 54,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Icon(
+                                      switch (r.service) {
+                                        ServiceType.hotel => Icons.hotel,
+                                        ServiceType.localRide =>
+                                          Icons.directions_car,
+                                        ServiceType.rentCar =>
+                                          Icons.car_rental,
+                                        ServiceType.tour => Icons.map,
+                                        ServiceType.airport =>
+                                          Icons.flight_takeoff,
+                                        _ => Icons.card_giftcard,
+                                      },
+                                      color: TIColors.teal),
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -355,11 +370,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
 class _ResultItem {
   final String id, title, subtitle, priceUnit;
+  final String img;
   final ServiceType service;
   final double rating, price;
   final bool verified;
   _ResultItem({
     required this.id,
+    required this.img,
     required this.service,
     required this.title,
     required this.subtitle,

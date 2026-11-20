@@ -358,16 +358,27 @@ class BookingsTab extends StatelessWidget {
                 color: TIColors.teal.withOpacity(.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                  switch (b.service) {
-                    ServiceType.hotel => Icons.hotel,
-                    ServiceType.localRide => Icons.directions_car,
-                    ServiceType.rentCar => Icons.car_rental,
-                    ServiceType.tour => Icons.map,
-                    ServiceType.airport => Icons.flight_takeoff,
-                    _ => Icons.card_giftcard,
-                  },
-                  color: TIColors.teal),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(11),
+                child: Image.network(
+                  kProvinceImgs[b.provinceId] ?? kDemoImg,
+                  width: 46,
+                  height: 46,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Center(
+                    child: Icon(
+                        switch (b.service) {
+                          ServiceType.hotel => Icons.hotel,
+                          ServiceType.localRide => Icons.directions_car,
+                          ServiceType.rentCar => Icons.car_rental,
+                          ServiceType.tour => Icons.map,
+                          ServiceType.airport => Icons.flight_takeoff,
+                          _ => Icons.card_giftcard,
+                        },
+                        color: TIColors.teal),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

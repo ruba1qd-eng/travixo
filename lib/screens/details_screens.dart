@@ -53,6 +53,7 @@ class _CategoryListScreen extends StatelessWidget {
         for (final h in getAllHotels())
           _Tile(
             icon: Icons.hotel,
+            imageUrl: h.img(),
             title: h.name,
             subtitle: '${l.province(h.provinceId)} • ⭐ ${h.rating}',
             trailing: h.rooms.isNotEmpty ? l.money(h.rooms.first.pricePerNightYer) : '—',
@@ -67,6 +68,7 @@ class _CategoryListScreen extends StatelessWidget {
         for (final c in kCars.where((c) => c.withDriver))
           _Tile(
             icon: Icons.directions_car,
+            imageUrl: c.img(),
             title: c.name,
             subtitle: '${l.carCat(c.categoryId)} • ${c.seats} ${l.t('seats')}',
             trailing: l.money(c.pricePerDayYer),
@@ -81,6 +83,7 @@ class _CategoryListScreen extends StatelessWidget {
         for (final c in kCars.where((c) => !c.withDriver))
           _Tile(
             icon: Icons.car_rental,
+            imageUrl: c.img(),
             title: c.name,
             subtitle: '${l.carCat(c.categoryId)} • ${c.seats} ${l.t('seats')}',
             trailing: l.money(c.pricePerDayYer),
@@ -95,6 +98,7 @@ class _CategoryListScreen extends StatelessWidget {
         for (final t in kTours)
           _Tile(
             icon: Icons.map,
+            imageUrl: kProvinceImgs[t.provinceId] ?? kDemoImg,
             title: t.name,
             subtitle:
                 '${l.province(t.provinceId)} • ${t.days} ${l.t('days')} • ${t.seatsLeft} ${l.t('available')}',
@@ -119,11 +123,13 @@ class _CategoryListScreen extends StatelessWidget {
 
 class _Tile extends StatelessWidget {
   final IconData icon;
+  final String? imageUrl;
   final String title, subtitle, trailing;
   final VoidCallback onTap;
 
   const _Tile({
     required this.icon,
+    this.imageUrl,
     required this.title,
     required this.subtitle,
     required this.trailing,
@@ -151,7 +157,19 @@ class _Tile extends StatelessWidget {
               color: TIColors.teal.withOpacity(.12),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: TIColors.teal),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: imageUrl != null
+                  ? Image.network(
+                      imageUrl!,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          Center(child: Icon(icon, color: TIColors.teal)),
+                    )
+                  : Center(child: Icon(icon, color: TIColors.teal)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
