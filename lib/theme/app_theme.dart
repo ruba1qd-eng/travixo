@@ -12,7 +12,7 @@ class TIColors {
   static const Color navy = Color(0xFF201D1A);
   static const Color navyDark = Color(0xFF141210);
   static const Color gold = Color(0xFFFF8C1A);
-  static const Color teal = Color(0xFF14B8A6);
+  static const Color teal = Color(0xFFC95F00); // كان تيل أزرق — صار برتقالي عميق (لا أزرق في الهوية إطلاقاً)
   static const Color softGray = Color(0xFFF7F5F1);
   static const Color danger = Color(0xFFE5484D);
   static const Color success = Color(0xFF2FA96E);
@@ -49,6 +49,7 @@ class TIRadius {
   static const double large = 28;    // أكبر من 22
   static const double card = medium;
   static const double sheet = large;
+  static const double l = large; // اختصار شائع في الشاشات
 }
 
 class TravixoFX {
@@ -76,6 +77,9 @@ class TravixoFX {
 }
 
 class AppTheme {
+  static ThemeData get light => build(false);
+  static ThemeData get dark => build(true);
+
   static ThemeData build(bool isDark) {
     final bg = isDark ? TIColors.navyDark : TIColors.softGray;
     final card = isDark ? TIColors.darkCard : TIColors.lightCard;
@@ -206,8 +210,6 @@ class AppTheme {
         selectedItemColor: TIColors.orange,
         unselectedItemColor: sub,
         type: BottomNavigationBarType.fixed,
-        selectedFontSize: 14, // أكبر من 13
-        unselectedFontSize: 12, // أكبر من 11
       ),
       
       // سلّم الخطوط النصي — أحجام أكبر
