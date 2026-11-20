@@ -1,76 +1,31 @@
 // النماذج وخرائط الصور الحقيقية — Travixo Data Models
-// مع نظام صور حقيقي من Wikimedia Commons + API ديناميكي
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../l10n/app_localizations.dart';
 
 // ====== الجداول التعدادية الستة ======
-
 enum Availability { available, limited, comingSoon, unavailable }
-
 enum ServiceType { localRide, rentCar, hotel, airport, tour, package }
-
-enum BookingStatus {
-  pending, confirmed, assigned, active, completed, cancelled, refunded
-}
-
+enum BookingStatus { pending, confirmed, assigned, active, completed, cancelled, refunded }
 enum PaymentMethod { wallet, cash, kuraimi, digitalWallet }
-
 enum TxStatus { pending, completed, failed, refunded }
-
 enum Membership { basic, priority, vip }
 
-// ====== نظام الصور الحقيقي — Wikimedia Commons ======
-
-// كاش للصور المجلوبة ديناميكياً
-final Map<String, String?> _wikiCache = {};
-
-/// يجلب صورة حقيقية من Wikimedia Commons API (بدون مفتاح)
-Future<String?> commonsImage(String query) async {
-  if (_wikiCache.containsKey(query)) return _wikiCache[query];
-  try {
-    final uri = Uri.https('commons.wikimedia.org', '/w/api.php', {
-      'action': 'query',
-      'format': 'json',
-      'origin': '*',
-      'generator': 'search',
-      'gsrnamespace': '6',
-      'gsrsearch': query,
-      'prop': 'imageinfo',
-      'iiprop': 'url',
-      'iiurlwidth': '800',
-    });
-    final response = await http.get(uri).timeout(const Duration(seconds: 5));
-    final data = jsonDecode(response.body);
-    final pages = (data['query']?['pages'] as Map?)?.values.toList();
-    final url = pages?.isNotEmpty == true
-        ? pages![0]['imageinfo']?[0]?['thumburl'] as String?
-        : null;
-    _wikiCache[query] = url;
-    return url;
-  } catch (_) {
-    _wikiCache[query] = null;
-    return null;
-  }
-}
-
 // ====== خرائط الصور الحقيقية — Wikimedia Commons ======
-// روابط حقيقية تم التحقق منها للأماكن اليمنية
-
 const kProvinceImgs = {
   'sanaa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Old_City_Of_Sanaa_%2895129511%29.jpeg/800px-Old_City_Of_Sanaa_%2895129511%29.jpeg',
   'aden': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Aden_Yemen.jpg/800px-Aden_Yemen.jpg',
   'taiz': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Taiz%2C_Yemen_%2816345552321%29.jpg/800px-Taiz%2C_Yemen_%2816345552321%29.jpg',
-  'hadramaut': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Shibam_Hadramaut_1.jpg/800px-Shibam_Hadramaut_1.jpg',
+  'hadramout': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Shibam_Hadramaut_1.jpg/800px-Shibam_Hadramaut_1.jpg',
+  'hadramaut_alt': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Shibam_Hadramaut_1.jpg/800px-Shibam_Hadramaut_1.jpg',
   'hodeidah': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Al_Hudaydah.jpg/800px-Al_Hudaydah.jpg',
   'ibb': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Ibb_Yemen.jpg/800px-Ibb_Yemen.jpg',
-  'dhmar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Dhamar_Yemen.jpg/800px-Dhamar_Yemen.jpg',
+  'dhamar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Dhamar_Yemen.jpg/800px-Dhamar_Yemen.jpg',
   'marib': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Marib_Dam.jpg/800px-Marib_Dam.jpg',
-  'lahj': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Lahj_Yemen.jpg/800px-Lahj_Yemen.jpg',
+  'lahij': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Lahj_Yemen.jpg/800px-Lahj_Yemen.jpg',
   'hajjah': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Hajjah_Yemen.jpg/800px-Hajjah_Yemen.jpg',
   'amran': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Amran_Yemen.jpg/800px-Amran_Yemen.jpg',
-  'saada': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Saada_Yemen.jpg/800px-Saada_Yemen.jpg',
-  'shabwah': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Shabwah_Yemen.jpg/800px-Shabwah_Yemen.jpg',
+  'sadah': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Saada_Yemen.jpg/800px-Saada_Yemen.jpg',
+  'shabwa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Shabwah_Yemen.jpg/800px-Shabwah_Yemen.jpg',
   'abyan': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Abyan_Yemen.jpg/800px-Abyan_Yemen.jpg',
 };
 
@@ -94,9 +49,11 @@ const kHotelImgs = {
 
 const kPlaceImgs = {
   'old_sanaa': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Old_City_Of_Sanaa_%2895129511%29.jpeg/800px-Old_City_Of_Sanaa_%2895129511%29.jpeg',
+  'sanaa_old_market': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Old_City_Market%2C_Sanaa_%2810035332343%29.jpg/800px-Old_City_Market%2C_Sanaa_%2810035332343%29.jpg',
   'dar_alhajar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Dar_al-Hajar.jpg/800px-Dar_al-Hajar.jpg',
   'shibam': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Shibam_Hadramaut_1.jpg/800px-Shibam_Hadramaut_1.jpg',
   'socotra_dragon': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Dragon%27s_Blood_Trees%2C_Socotra_Island.jpg/800px-Dragon%27s_Blood_Trees%2C_Socotra_Island.jpg',
+  'socotra_archipelago': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Dragon_blood_trees_in_Socotra_Island%2C_Yemen.jpg/800px-Dragon_blood_trees_in_Socotra_Island%2C_Yemen.jpg',
   'qalansiyah_beach': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Socotra_Beach.jpg/800px-Socotra_Beach.jpg',
   'shaharah_bridge': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Shaharah_Bridge.jpg/800px-Shaharah_Bridge.jpg',
   'jabal_bara': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Jabal_Bara.jpg/800px-Jabal_Bara.jpg',
@@ -107,8 +64,6 @@ const kPlaceImgs = {
   'taiz_citadel': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Taiz_Citadel.jpg/800px-Taiz_Citadel.jpg',
   'marib_dam': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Marib_Dam.jpg/800px-Marib_Dam.jpg',
   'haraz_mountains': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Haraz_Mountains.jpg/800px-Haraz_Mountains.jpg',
-  'sanaa_old_market': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Old_City_Market%2C_Sanaa_%2810035332343%29.jpg/800px-Old_City_Market%2C_Sanaa_%2810035332343%29.jpg',
-  'socotra_archipelago': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Dragon_blood_trees_in_Socotra_Island%2C_Yemen.jpg/800px-Dragon_blood_trees_in_Socotra_Island%2C_Yemen.jpg',
   'wadi_dhahr': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Wadi_Dhahr.jpg/800px-Wadi_Dhahr.jpg',
   'al_mahwit': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Al_Mahwit.jpg/800px-Al_Mahwit.jpg',
 };
@@ -126,11 +81,9 @@ const kCarImgs = {
   'hyundai_h1': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Hyundai_H-1.jpg/800px-Hyundai_H-1.jpg',
 };
 
-// صورة عامة للفنادق الديمو
 const kDemoImg = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Old_City_Of_Sanaa_%2895129511%29.jpeg/800px-Old_City_Of_Sanaa_%2895129511%29.jpeg';
 
 // ====== النماذج ======
-
 class AppUser {
   final String id;
   final String firstName;
@@ -233,14 +186,10 @@ class Hotel {
     required this.lng,
   });
 
-  Availability get availability {
-    if (rooms.any((r) => r.available)) return Availability.available;
-    return Availability.limited;
-  }
+  Availability get availability =>
+      rooms.any((r) => r.available) ? Availability.available : Availability.limited;
 
-  String img() {
-    return kHotelImgs[id] ?? kProvinceImgs[provinceId] ?? kDemoImg;
-  }
+  String img() => kHotelImgs[id] ?? kProvinceImgs[provinceId] ?? kDemoImg;
 }
 
 class Car {
@@ -253,7 +202,7 @@ class Car {
   final bool withDriver;
   final String transmission;
   final String fuel;
-  final String status;
+  final Availability status;
   final String? driverName;
   final double driverRating;
 
@@ -272,16 +221,13 @@ class Car {
     this.driverRating = 4.8,
   });
 
-  String img() {
-    return kCarImgs[id] ?? kCarImgs.values.first;
-  }
+  String img() => kCarImgs[id] ?? kCarImgs.values.first;
 }
 
 class TourDay {
   final int day;
   final String title;
   final String details;
-
   TourDay({required this.day, required this.title, required this.details});
 }
 
@@ -431,28 +377,19 @@ class Review {
   final String author;
   final int stars;
   final String text;
-
   Review({required this.author, required this.stars, required this.text});
 }
 
+// ====== Province: id + status فقط (متطابق مع الوثيقة الأصلية) ======
 class Province {
   final String id;
   final Availability status;
-  final double lat;
-  final double lng;
-  final int hotelsCount;
-
-  Province({
-    required this.id,
-    required this.status,
-    required this.lat,
-    required this.lng,
-    required this.hotelsCount,
-  });
+  Province({required this.id, required this.status});
 
   String img() => kProvinceImgs[id] ?? kDemoImg;
 }
 
+// ====== BestPlace: ترجمة فعلية عبر AppLocalizations ======
 class BestPlace {
   final String id;
   final String nameAr;
@@ -480,14 +417,11 @@ class BestPlace {
     required this.unesco,
   });
 
-  String name(BuildContext context) {
-    // يعتمد على اللغة الحالية — يُستدعى عبر context.l
-    return nameAr; // سيتم تحسينه لاحقاً
-  }
+  String name(BuildContext context) =>
+      AppLocalizations.of(context).code == 'ar' ? nameAr : nameEn;
 
-  String desc(BuildContext context) => descAr;
+  String desc(BuildContext context) =>
+      AppLocalizations.of(context).code == 'ar' ? descAr : descEn;
 
-  String img() {
-    return kPlaceImgs[id] ?? kProvinceImgs[provinceId] ?? kDemoImg;
-  }
+  String img() => kPlaceImgs[id] ?? kProvinceImgs[provinceId] ?? kDemoImg;
 }
