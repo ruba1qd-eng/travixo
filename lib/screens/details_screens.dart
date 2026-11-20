@@ -536,7 +536,7 @@ class _CarDetails extends StatelessWidget {
       body: ListView(padding: const EdgeInsets.all(16), children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: Image.network(carImg(car.id),
+          child: Image.network(car.img(),
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
