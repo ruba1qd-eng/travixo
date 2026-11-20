@@ -21,6 +21,13 @@ class AppState extends ChangeNotifier {
   // ===== المستخدم =====
   AppUser? user;
 
+  // ===== التهيئة الأولى =====
+  bool get hasSeenOnboarding => prefs.getBool('hasSeenOnboarding') ?? false;
+  void markOnboardingSeen() {
+    prefs.setBool('hasSeenOnboarding', true);
+    notifyListeners();
+  }
+
   // ===== البيانات =====
   List<Booking> bookings = [];
   List<WalletTx> txs = [];
