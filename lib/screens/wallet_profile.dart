@@ -249,7 +249,7 @@ class ProfileTab extends StatelessWidget {
           _item(context, Icons.mail_outline,
               '${l.t('email')}: ${user?.email ?? user?.phone ?? '—'}', null),
           // تعديل البيانات الشخصية — الاسم والبريد والرقم
-          _item(context, Icons.edit_outlined, 'تعديل البيانات', () {
+          _item(context, Icons.edit_outlined, l.t('editData'), () {
             Haptics.light();
             Navigator.push(
               context,

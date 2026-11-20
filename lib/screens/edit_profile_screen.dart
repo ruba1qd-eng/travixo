@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
+import '../l10n/app_localizations.dart';
 
 /// شاشة تعديل البيانات الشخصية — الاسم والبريد والرقم
 class EditProfileScreen extends StatefulWidget {
@@ -39,60 +40,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       phone: _phone.text.trim(),
     );
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم حفظ التعديلات بنجاح ✓')),
+      SnackBar(content: Text(context.l.t('savedOk'))),
     );
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l;
     return Scaffold(
-      appBar: AppBar(title: const Text('تعديل الملف الشخصي')),
+      appBar: AppBar(title: Text(l.t('editProfileTitle'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _first,
-            decoration: const InputDecoration(
-              labelText: 'الاسم الأول',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person_outline),
+            decoration: InputDecoration(
+              labelText: l.t('firstName'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.person_outline),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _second,
-            decoration: const InputDecoration(
-              labelText: 'الاسم الثاني',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person_outline),
+            decoration: InputDecoration(
+              labelText: l.t('secondName'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.person_outline),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _email,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'البريد الإلكتروني',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: InputDecoration(
+              labelText: l.t('email'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _phone,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'رقم الجوال',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.phone_outlined),
+            decoration: InputDecoration(
+              labelText: l.t('mobile'),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.phone_outlined),
             ),
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
             onPressed: _save,
             icon: const Icon(Icons.save),
-            label: const Text('حفظ التعديلات'),
+            label: Text(l.t('saveEdits')),
           ),
         ],
       ),
