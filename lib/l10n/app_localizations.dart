@@ -23,16 +23,17 @@ class AppLocalizations {
   String roomType(String id) => _rooms[code]?[id] ?? id;
   String carCat(String id) => _carCats[code]?[id] ?? id;
 
-  /// العملة: YER / USD / SAR
+  /// العملة: YER / USD / SAR — تقبل int و double معاً
   String money(num yer) {
+    final y = yer.toDouble();
     const yerPerUsd = 530.0, sarPerUsd = 3.75;
     switch (currency) {
       case 'USD':
-        return '\$${(yer / yerPerUsd).toStringAsFixed(0)}';
+        return '\$${(y / yerPerUsd).toStringAsFixed(0)}';
       case 'SAR':
-        return '${(yer / yerPerUsd * sarPerUsd).toStringAsFixed(0)} SAR';
+        return '${(y / yerPerUsd * sarPerUsd).toStringAsFixed(0)} SAR';
       default:
-        return '${yer.toStringAsFixed(0)} ${t('yer')}';
+        return '${y.toStringAsFixed(0)} ${t('yer')}';
     }
   }
 
@@ -249,8 +250,6 @@ class AppLocalizations {
       'saveEdits': 'حفظ التعديلات',
       'avatarUploadFail': 'فشل رفع الصورة',
       'avatarDeleteFail': 'فشل حذف الصورة',
-
-      // ===== الخطوة 3-4: الميزات الجديدة =====
       'planTrip': 'صمم خطتك',
       'planTripTitle': 'مخطط الرحلات الذكي',
       'planTripSubtitle': 'اختر الوجهة والأيام والميزانية وسنولّد لك برنامجاً يومياً كاملاً مع التكلفة التقديرية',
@@ -481,8 +480,6 @@ class AppLocalizations {
       'saveEdits': 'Save changes',
       'avatarUploadFail': 'Failed to upload photo',
       'avatarDeleteFail': 'Failed to delete photo',
-
-      // ===== Steps 3-4: New features =====
       'planTrip': 'Plan Your Trip',
       'planTripTitle': 'Smart Trip Planner',
       'planTripSubtitle': 'Pick destination, days and budget — we generate a full daily program with estimated cost',
