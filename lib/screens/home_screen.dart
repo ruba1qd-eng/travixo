@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../data/models.dart';
 import '../data/demo_data.dart';
 import '../data/real_hotels_data.dart';
+import '../data/places_data.dart';
 import '../screens/haptic.dart';
 import 'package:provider/provider.dart';
 
@@ -161,7 +162,7 @@ class HomeScreen extends StatelessWidget {
                       _ServiceCard(
                         color: TIColors.cardMap,
                         icon: Icons.map_outlined,
-                        title: l.t('live_map'),
+                        title: l.t('liveMap'),
                         onTap: () {
                           Haptics.light();
                           // فتح الخريطة الحية
@@ -203,9 +204,9 @@ class HomeScreen extends StatelessWidget {
                     height: 140, // أكبر من 120
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: DemoData.offers.length,
+                      itemCount: kOffers.length,
                       itemBuilder: (ctx, i) {
-                        final offer = DemoData.offers[i];
+                        final offer = kOffers[i];
                         return GestureDetector(
                           onTap: () {
                             Haptics.light();
@@ -295,9 +296,9 @@ class HomeScreen extends StatelessWidget {
                     height: 200, // أكبر من 180
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: RealHotelsData.hotels.length > 6 ? 6 : RealHotelsData.hotels.length,
+                      itemCount: getAllHotels().length > 6 ? 6 : getAllHotels().length,
                       itemBuilder: (ctx, i) {
-                        final hotel = RealHotelsData.hotels[i];
+                        final hotel = getAllHotels()[i];
                         return GestureDetector(
                           onTap: () {
                             Haptics.light();
@@ -412,9 +413,9 @@ class HomeScreen extends StatelessWidget {
                     height: 200, // أكبر من 180
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: DemoData.bestPlaces.length > 6 ? 6 : DemoData.bestPlaces.length,
+                      itemCount: kBestPlaces.length > 6 ? 6 : kBestPlaces.length,
                       itemBuilder: (ctx, i) {
-                        final place = DemoData.bestPlaces[i];
+                        final place = kBestPlaces[i];
                         return GestureDetector(
                           onTap: () {
                             Haptics.light();
@@ -466,7 +467,7 @@ class HomeScreen extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        place.name(context),
+                                        place.name(l.isArabic),
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,

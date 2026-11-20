@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'main_shell.dart';
 
@@ -19,6 +21,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeOutCubic);
     } else {
+      context.read<AppState>().markOnboardingSeen();
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainShell()), (r) => false);
     }
@@ -104,11 +107,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Row(children: [
               if (_page < 2)
                 TextButton(
-                    onPressed: () => Navigator.of(context)
-                        .pushAndRemoveUntil(
-                            MaterialPageRoute(
-                                builder: (_) => const MainShell()),
-                            (r) => false),
+                    onPressed: () {
+                      context.read<AppState>().markOnboardingSeen();
+                      Navigator.of(context)
+                          .pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (_) => const MainShell()),
+                              (r) => false);
+                    },
                     child: Text(l.t('skip'))),
               const Spacer(),
               FilledButton(

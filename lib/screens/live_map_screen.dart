@@ -1,4 +1,6 @@
 // الخريطة الحية — OpenStreetMap حقيقية + بديل مرسوم بدون إنترنت
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -38,7 +40,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     'abyan': LatLng(13.1200, 45.6000),
     'socotra': LatLng(12.5500, 53.9500),
     'mahrah': LatLng(16.2000, 52.1500),
-    'aljawf': LatLng(16.1500, 45.1000),
+    'jawf': LatLng(16.1500, 45.1000),
     'bayda': LatLng(13.9500, 45.5500),
     'dhale': LatLng(13.6800, 44.7500),
     'rima': LatLng(14.6000, 43.6000),
@@ -55,7 +57,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   int _hotelCount(String pid) {
     int c = 0;
-    for (final h in RealHotelsData.hotels) {
+    for (final h in getAllHotels()) {
       if (h.provinceId == pid) c++;
     }
     return c;
@@ -83,7 +85,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(l.t('live_map'),
+        title: Text(l.t('liveMap'),
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
         centerTitle: true,
         actions: [
@@ -119,10 +121,9 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.travixo.travel_in_app',
-          tileErrorBuilder: (c, e, t) => const SizedBox.shrink(),
         ),
         CircleLayer(circles: [
-          for (final p in DemoData.provinces)
+          for (final p in kProvinces)
             if (_coords[p.id] != null)
               CircleMarker(
                 point: _coords[p.id]!,
@@ -133,7 +134,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
               ),
         ]),
         MarkerLayer(markers: [
-          for (final p in DemoData.provinces)
+          for (final p in kProvinces)
             if (_coords[p.id] != null)
               Marker(
                 point: _coords[p.id]!,
@@ -182,6 +183,20 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                 ),
               ),
         ]),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Text(
+              '© OpenStreetMap contributors',
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.black87,
+                backgroundColor: Colors.white.withOpacity(.85),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -224,7 +239,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   }
 
   Widget _chips(AppLocalizations l) {
-    final ps = DemoData.provinces;
+    final ps = kProvinces;
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -266,7 +281,7 @@ class _ProvinceSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l;
-    final hotels = RealHotelsData.hotels
+    final hotels = getAllHotels()
         .where((h) => h.provinceId == province.id)
         .take(3)
         .toList();
@@ -457,13 +472,13 @@ class _MapPainter extends CustomPainter {
       ..color = TIColors.orange.withOpacity(0.5)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
-    final p = Path();
+    final p = ui.Path();
     p.moveTo(size.width * 0.2, size.height * 0.7);
     p.lineTo(size.width * 0.4, size.height * 0.45);
     p.lineTo(size.width * 0.65, size.height * 0.5);
     p.lineTo(size.width * 0.85, size.height * 0.3);
     canvas.drawPath(p, route);
-    for (final prov in DemoData.provinces) {
+    for (final prov in kProvinces) {
       final dx = _rx(prov.id) * size.width;
       final dy = _ry(prov.id) * size.height;
       final c = _pc(prov.status);
@@ -486,7 +501,7 @@ class _MapPainter extends CustomPainter {
     const m = {
       'hajjah': 0.18, 'sadah': 0.22, 'amran': 0.28, 'sanaa': 0.32,
       'hodeidah': 0.12, 'ibb': 0.35, 'taiz': 0.33, 'dhamar': 0.38,
-      'lahij': 0.30, 'aden': 0.35, 'marib': 0.52, 'aljawf': 0.48,
+      'lahij': 0.30, 'aden': 0.35, 'marib': 0.52, 'jawf': 0.48,
       'shabwa': 0.62, 'hadramout': 0.78, 'mahrah': 0.92, 'abyan': 0.42,
       'bayda': 0.50, 'dhale': 0.45, 'rima': 0.25, 'socotra': 0.95,
     };
@@ -497,7 +512,7 @@ class _MapPainter extends CustomPainter {
     const m = {
       'hajjah': 0.30, 'sadah': 0.18, 'amran': 0.25, 'sanaa': 0.35,
       'hodeidah': 0.42, 'ibb': 0.55, 'taiz': 0.62, 'dhamar': 0.50,
-      'lahij': 0.68, 'aden': 0.78, 'marib': 0.40, 'aljawf': 0.30,
+      'lahij': 0.68, 'aden': 0.78, 'marib': 0.40, 'jawf': 0.30,
       'shabwa': 0.48, 'hadramout': 0.45, 'mahrah': 0.30, 'abyan': 0.70,
       'bayda': 0.52, 'dhale': 0.60, 'rima': 0.35, 'socotra': 0.85,
     };

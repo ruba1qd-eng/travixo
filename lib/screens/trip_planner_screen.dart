@@ -228,7 +228,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen> {
             decoration: BoxDecoration(
               gradient: TravixoFX.orange,
               borderRadius: BorderRadius.circular(TIRadius.l),
-              boxShadow: TravixoFX.shadow(TIColors.orangeDeep),
+              boxShadow: [TravixoFX.shadow(TIColors.orangeDeep)],
             ),
             child: Row(children: [
               const Icon(Icons.event_note, color: Colors.white, size: 34),
