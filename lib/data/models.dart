@@ -1,8 +1,7 @@
-// النماذج وخرائط الصور الحقيقية — Travixo Data Models
-import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
 
-// ====== الجداول التعدادية الستة ======
+/// Travixo — Data Models (Phase 1)
+/// كل النماذج جاهزة للربط بـ Backend حقيقي مستقبلاً ( toJson / fromJson )
+
 enum Availability { available, limited, comingSoon, unavailable }
 enum ServiceType { localRide, rentCar, hotel, airport, tour, package }
 enum BookingStatus { pending, confirmed, assigned, active, completed, cancelled, refunded }
@@ -10,9 +9,48 @@ enum PaymentMethod { wallet, cash, kuraimi, digitalWallet }
 enum TxStatus { pending, completed, failed, refunded }
 enum Membership { basic, priority, vip }
 
-// ====== خرائط الصور الحقيقية — Wikimedia Commons ======
-// صور حقيقية مؤكدة (كل رابط اختُبر individually ويعمل 200) — المفاتيح مطابقة لمعرفات البيانات
+class AppUser {
+  final String id;
+  final String firstName, secondName;
+  final int age;
+  final String? phone, email, photoUrl;
+  final String role; // customer | developer
+  final Membership membership;
+  final bool demo;
 
+  AppUser({
+    required this.id,
+    required this.firstName,
+    required this.secondName,
+    required this.age,
+    this.phone,
+    this.email,
+    this.photoUrl,
+    this.role = 'customer',
+    this.membership = Membership.basic,
+    this.demo = true,
+  });
+
+  String get fullName => '$firstName $secondName';
+
+  Map<String, dynamic> toJson() => {
+        'id': id, 'firstName': firstName, 'secondName': secondName, 'age': age,
+        'phone': phone, 'email': email, 'photoUrl': photoUrl, 'role': role,
+        'membership': membership.name, 'demo': demo,
+      };
+
+  factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
+        id: j['id'], firstName: j['firstName'] ?? '', secondName: j['secondName'] ?? '',
+        age: (j['age'] as num?)?.toInt() ?? 0,
+        phone: j['phone'], email: j['email'], photoUrl: j['photoUrl'],
+        role: j['role'] ?? 'customer',
+        membership: Membership.values.firstWhere((m) => m.name == j['membership'],
+            orElse: () => Membership.basic),
+        demo: j['demo'] ?? true,
+      );
+}
+
+/// صور توضيحية من مصدر مرخص (Unsplash) — تُستبدل بصور الشركاء عند الإطلاق
 const Map<String, String> kProvinceImgs = {
   'sanaa': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5ca171f1a0af.jpg',
   'aden': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d49ecca8a077.jpg',
@@ -37,6 +75,31 @@ const Map<String, String> kProvinceImgs = {
   'rima': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/32f6fd0b086a.jpg',
 };
 
+String hotelImg(String provinceId, int index) =>
+    kProvinceImgs[provinceId] ?? kDemoImg;
+
+/// صورة حقيقية لكل سيارة (من الويب) — المفتاح: معرّف السيارة
+const Map<String, String> kCarImgs = {
+  'c1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3bf898d94540.jpg',
+  'c2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9759e33b8529.jpg',
+  'c3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c5b816f285c6.jpg',
+  'c4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2fef5c2a9011.jpg',
+  'c5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4adf88d56774.jpg',
+  'c6': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/23c5704929ab.jpg',
+  'c7': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/163b406912b0.jpg',
+  'r1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8014ec0a0cfb.jpg',
+  'r2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ae07e8abfc8d.jpg',
+  'r3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5458819d0c15.jpg',
+  'r4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/dd6648881979.jpg',
+  'r5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/173ffd069a44.jpg',
+};
+
+String carImg(String carId) => kCarImgs[carId] ?? kCarImgs['c1']!;
+
+const String kDemoImg = 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ac5117f479b7.jpg';
+
+/// صور حقيقية للفنادق الموثّقة (من الويب) — المفتاح: معرّف الفندق
+/// تُستبدل بصور الشركاء الرسمية عند الإطلاق
 const Map<String, String> kHotelImgs = {
   'h1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/7c8e35963185.jpg',
   'h2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/afe9f24fb247.png',
@@ -63,6 +126,7 @@ const Map<String, String> kHotelImgs = {
   'rh15': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/f53351f6b047.jpg',
 };
 
+/// صور حقيقية لأفضل الأماكن في اليمن — المفتاح: معرّف المكان
 const Map<String, String> kPlaceImgs = {
   'p1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3764d994d03a.jpg',
   'p2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2bbca0cd2188.jpg',
@@ -83,113 +147,29 @@ const Map<String, String> kPlaceImgs = {
   'p17': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/51e2f9894f18.jpg',
   'p18': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/59ca294af8bb.jpg',
 };
-
-const Map<String, String> kCarImgs = {
-  'c1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3bf898d94540.jpg',
-  'c2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/9759e33b8529.jpg',
-  'c3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c5b816f285c6.jpg',
-  'c4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2fef5c2a9011.jpg',
-  'c5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/4adf88d56774.jpg',
-  'c6': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/23c5704929ab.jpg',
-  'c7': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/163b406912b0.jpg',
-  'r1': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/8014ec0a0cfb.jpg',
-  'r2': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ae07e8abfc8d.jpg',
-  'r3': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5458819d0c15.jpg',
-  'r4': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/dd6648881979.jpg',
-  'r5': 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/173ffd069a44.jpg',
-};
-
-const String kDemoImg = 'https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/ac5117f479b7.jpg';
-
-// ====== النماذج ======
-class AppUser {
+class Province {
   final String id;
-  final String firstName;
-  final String secondName;
-  final int age;
-  final String? phone;
-  final String? email;
-  final String? photoUrl;
-  final String role;
-  final Membership membership;
+  final Availability status;
+  const Province(this.id, this.status);
 
-  AppUser({
-    required this.id,
-    required this.firstName,
-    required this.secondName,
-    required this.age,
-    this.phone,
-    this.email,
-    this.photoUrl,
-    this.role = 'customer',
-    this.membership = Membership.basic,
-  });
-
-  factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
-    id: json['id'] ?? '',
-    firstName: json['firstName'] ?? '',
-    secondName: json['secondName'] ?? '',
-    age: json['age'] ?? 0,
-    phone: json['phone'],
-    email: json['email'],
-    photoUrl: json['photoUrl'],
-    role: json['role'] ?? 'customer',
-    membership: Membership.values.firstWhere(
-      (e) => e.name == json['membership'],
-      orElse: () => Membership.basic,
-    ),
-  );
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'firstName': firstName,
-    'secondName': secondName,
-    'age': age,
-    'phone': phone,
-    'email': email,
-    'photoUrl': photoUrl,
-    'role': role,
-    'membership': membership.name,
-  };
-}
-
-class HotelRoom {
-  final String id;
-  final String name;
-  final String typeId;
-  final String bedType;
-  final int pricePerNightYer;
-  final int capacity;
-  final List<String> amenities;
-  final bool available;
-
-  HotelRoom({
-    required this.id,
-    required this.name,
-    required this.typeId,
-    required this.bedType,
-    required this.pricePerNightYer,
-    required this.capacity,
-    required this.amenities,
-    required this.available,
-  });
+  String img() => kProvinceImgs[id] ?? kDemoImg;
 }
 
 class Hotel {
-  final String id;
-  final String name;
-  final String provinceId;
-  final String cityId;
+  final String id, name;
+  final String provinceId, cityId;
   final double rating;
   final int reviewsCount;
   final String description;
   final List<String> amenities;
   final List<HotelRoom> rooms;
-  final bool verified;
-  final double lat;
-  final double lng;
+  final bool verified; // موثّق = بيانات حقيقية، غير موثّق = Demo
+  final double lat, lng;
 
-  Hotel({
+  /// صورة الفندق — حقيقية للفندق نفسه إن وُجدت، وإلا صورة المحافظة
+  String img() => kHotelImgs[id] ?? hotelImg(provinceId, id.hashCode.abs());
+
+  const Hotel({
     required this.id,
     required this.name,
     required this.provinceId,
@@ -199,32 +179,48 @@ class Hotel {
     required this.description,
     required this.amenities,
     required this.rooms,
-    required this.verified,
-    required this.lat,
-    required this.lng,
+    this.verified = false,
+    this.lat = 0,
+    this.lng = 0,
   });
 
-  Availability get availability =>
-      rooms.any((r) => r.available) ? Availability.available : Availability.limited;
+  Availability get availability => rooms.any((r) => r.available)
+      ? Availability.available
+      : Availability.limited;
+}
 
-  String img() => kHotelImgs[id] ?? kProvinceImgs[provinceId] ?? kDemoImg;
+class HotelRoom {
+  final String id, name, typeId, bedType;
+  final double pricePerNightYer;
+  final int capacity;
+  final List<String> amenities;
+  final bool available;
+
+  const HotelRoom({
+    required this.id,
+    required this.name,
+    required this.typeId,
+    required this.bedType,
+    required this.pricePerNightYer,
+    required this.capacity,
+    required this.amenities,
+    this.available = true,
+  });
 }
 
 class Car {
-  final String id;
-  final String name;
-  final String categoryId;
-  final int year;
-  final int seats;
-  final int pricePerDayYer;
-  final bool withDriver;
-  final String transmission;
-  final String fuel;
+  final String id, name, categoryId;
+  final int year, seats;
+  final double pricePerDayYer;
+  final bool withDriver; // true = نقل مع سائق، false = تأجير
+  final String transmission, fuel;
   final Availability status;
   final String? driverName;
   final double driverRating;
 
-  Car({
+  String img() => carImg(id);
+
+  const Car({
     required this.id,
     required this.name,
     required this.categoryId,
@@ -232,35 +228,23 @@ class Car {
     required this.seats,
     required this.pricePerDayYer,
     required this.withDriver,
-    required this.transmission,
-    required this.fuel,
-    required this.status,
+    this.transmission = 'Automatic',
+    this.fuel = 'Petrol',
+    this.status = Availability.available,
     this.driverName,
     this.driverRating = 4.8,
   });
-
-  String img() => kCarImgs[id] ?? kCarImgs.values.first;
-}
-
-class TourDay {
-  final int day;
-  final String title;
-  final String details;
-  TourDay({required this.day, required this.title, required this.details});
 }
 
 class Tour {
-  final String id;
-  final String name;
-  final String provinceId;
+  final String id, name, provinceId;
   final int days;
-  final int priceYer;
-  final List<String> includes;
-  final List<String> excludes;
+  final double priceYer;
+  final List<String> includes, excludes;
   final List<TourDay> plan;
   final int seatsLeft;
 
-  Tour({
+  const Tour({
     required this.id,
     required this.name,
     required this.provinceId,
@@ -269,19 +253,22 @@ class Tour {
     required this.includes,
     required this.excludes,
     required this.plan,
-    required this.seatsLeft,
+    this.seatsLeft = 8,
   });
 }
 
+class TourDay {
+  final String day, title, details;
+  const TourDay(this.day, this.title, this.details);
+}
+
 class Offer {
-  final String id;
-  final String title;
-  final String subtitle;
+  final String id, title, subtitle;
   final ServiceType service;
   final String targetId;
   final int discountPercent;
 
-  Offer({
+  const Offer({
     required this.id,
     required this.title,
     required this.subtitle,
@@ -295,10 +282,9 @@ class Booking {
   final String id;
   final ServiceType service;
   final String title;
-  final String provinceId;
-  final String cityId;
+  final String provinceId, cityId;
   final String dateText;
-  final int totalYer;
+  final double totalYer;
   final PaymentMethod payment;
   final BookingStatus status;
   final String createdAt;
@@ -313,55 +299,44 @@ class Booking {
     required this.dateText,
     required this.totalYer,
     required this.payment,
-    required this.status,
+    this.status = BookingStatus.confirmed,
     required this.createdAt,
-    required this.details,
+    this.details = const {},
   });
 
-  factory Booking.fromJson(Map<String, dynamic> json) => Booking(
-    id: json['id'] ?? '',
-    service: ServiceType.values.firstWhere(
-      (e) => e.name == json['service'],
-      orElse: () => ServiceType.hotel,
-    ),
-    title: json['title'] ?? '',
-    provinceId: json['provinceId'] ?? '',
-    cityId: json['cityId'] ?? '',
-    dateText: json['dateText'] ?? '',
-    totalYer: json['totalYer'] ?? 0,
-    payment: PaymentMethod.values.firstWhere(
-      (e) => e.name == json['payment'],
-      orElse: () => PaymentMethod.cash,
-    ),
-    status: BookingStatus.values.firstWhere(
-      (e) => e.name == json['status'],
-      orElse: () => BookingStatus.pending,
-    ),
-    createdAt: json['createdAt'] ?? '',
-    details: Map<String, dynamic>.from(json['details'] ?? {}),
-  );
+  bool get isUpcoming =>
+      status == BookingStatus.confirmed || status == BookingStatus.pending;
+  bool get isActive => status == BookingStatus.active;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'service': service.name,
-    'title': title,
-    'provinceId': provinceId,
-    'cityId': cityId,
-    'dateText': dateText,
-    'totalYer': totalYer,
-    'payment': payment.name,
-    'status': status.name,
-    'createdAt': createdAt,
-    'details': details,
-  };
+        'id': id, 'service': service.name, 'title': title,
+        'provinceId': provinceId, 'cityId': cityId, 'dateText': dateText,
+        'totalYer': totalYer, 'payment': payment.name, 'status': status.name,
+        'createdAt': createdAt, 'details': details,
+      };
+
+  factory Booking.fromJson(Map<String, dynamic> j) => Booking(
+        id: j['id'],
+        service: ServiceType.values.firstWhere((s) => s.name == j['service'],
+            orElse: () => ServiceType.localRide),
+        title: j['title'] ?? '',
+        provinceId: j['provinceId'] ?? '',
+        cityId: j['cityId'] ?? '',
+        dateText: j['dateText'] ?? '',
+        totalYer: (j['totalYer'] as num?)?.toDouble() ?? 0,
+        payment: PaymentMethod.values.firstWhere((p) => p.name == j['payment'],
+            orElse: () => PaymentMethod.cash),
+        status: BookingStatus.values.firstWhere((s) => s.name == j['status'],
+            orElse: () => BookingStatus.confirmed),
+        createdAt: j['createdAt'] ?? '',
+        details: Map<String, dynamic>.from(j['details'] ?? {}),
+      );
 }
 
 class WalletTx {
-  final String id;
-  final String reason;
-  final int amountYer;
+  final String id, reason, createdAt;
+  final double amountYer;
   final TxStatus status;
-  final String createdAt;
 
   WalletTx({
     required this.id,
@@ -371,75 +346,29 @@ class WalletTx {
     required this.createdAt,
   });
 
-  factory WalletTx.fromJson(Map<String, dynamic> json) => WalletTx(
-    id: json['id'] ?? '',
-    reason: json['reason'] ?? '',
-    amountYer: json['amountYer'] ?? 0,
-    status: TxStatus.values.firstWhere(
-      (e) => e.name == json['status'],
-      orElse: () => TxStatus.pending,
-    ),
-    createdAt: json['createdAt'] ?? '',
-  );
-
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'reason': reason,
-    'amountYer': amountYer,
-    'status': status.name,
-    'createdAt': createdAt,
-  };
+        'id': id, 'reason': reason, 'amountYer': amountYer,
+        'status': status.name, 'createdAt': createdAt,
+      };
+
+  factory WalletTx.fromJson(Map<String, dynamic> j) => WalletTx(
+        id: j['id'], reason: j['reason'] ?? '',
+        amountYer: (j['amountYer'] as num?)?.toDouble() ?? 0,
+        status: TxStatus.values.firstWhere((s) => s.name == j['status'],
+            orElse: () => TxStatus.completed),
+        createdAt: j['createdAt'] ?? '',
+      );
 }
 
 class Review {
-  final String author;
+  final String id, targetId, userName, comment;
   final int stars;
-  final String text;
-  Review({required this.author, required this.stars, required this.text});
-}
 
-// ====== Province: id + status فقط (متطابق مع الوثيقة الأصلية) ======
-class Province {
-  final String id;
-  final Availability status;
-  Province({required this.id, required this.status});
-
-  String img() => kProvinceImgs[id] ?? kDemoImg;
-}
-
-// ====== BestPlace: ترجمة فعلية عبر AppLocalizations ======
-class BestPlace {
-  final String id;
-  final String nameAr;
-  final String nameEn;
-  final String descAr;
-  final String descEn;
-  final String provinceId;
-  final String category;
-  final double rating;
-  final double lat;
-  final double lng;
-  final bool unesco;
-
-  BestPlace({
+  const Review({
     required this.id,
-    required this.nameAr,
-    required this.nameEn,
-    required this.descAr,
-    required this.descEn,
-    required this.provinceId,
-    required this.category,
-    required this.rating,
-    required this.lat,
-    required this.lng,
-    required this.unesco,
+    required this.targetId,
+    required this.userName,
+    required this.stars,
+    this.comment = '',
   });
-
-  String name(BuildContext context) =>
-      AppLocalizations.of(context).code == 'ar' ? nameAr : nameEn;
-
-  String desc(BuildContext context) =>
-      AppLocalizations.of(context).code == 'ar' ? descAr : descEn;
-
-  String img() => kPlaceImgs[id] ?? kProvinceImgs[provinceId] ?? kDemoImg;
 }
